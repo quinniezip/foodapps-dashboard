@@ -646,11 +646,12 @@ function updateKpiProgress(){
   document.getElementById('kpi-target-input').value=target;
   document.getElementById('kpi-target-display').textContent='= '+fmtVND(target);
   
+  const filteredData=getFilteredData();
   const progGrid=document.getElementById('kpi-progress-grid');
   const months=[{m:1,label:'Tháng 1/2026'},{m:2,label:'Tháng 2/2026'},{m:3,label:'Tháng 3/2026'}];
   let totalRev=0;
   progGrid.innerHTML=months.map(({m,label})=>{
-    const mData=RAW_DATA.filter(r=>r.thang===m);
+    const mData=filteredData.filter(r=>r.thang===m);
     const rev=mData.reduce((s,r)=>s+r.doanh_thu,0);
     totalRev+=rev;
     const pct=Math.min(rev/target*100,100);
@@ -674,7 +675,7 @@ function updateKpiProgress(){
   // Forecasts
   const forecastRow=document.getElementById('forecast-row');
   forecastRow.innerHTML=months.map(({m,label})=>{
-    const mData=RAW_DATA.filter(r=>r.thang===m);
+    const mData=filteredData.filter(r=>r.thang===m);
     if(!mData.length)return `<div class="forecast-item"><div class="forecast-label">${label}</div><div class="forecast-val">—</div></div>`;
     const dates=[...new Set(mData.map(r=>r.ngay))];
     const daysElapsed=dates.length;
@@ -933,12 +934,12 @@ function updateChannelCharts(){
   // Market share trend
   const msData={};
   CHANNELS.forEach(ch=>{msData[ch]={};});
-  RAW_DATA.forEach(r=>{
+  data.forEach(r=>{
     if(!msData[r.kenh])msData[r.kenh]={};
     msData[r.kenh][r.thang]=(msData[r.kenh][r.thang]||0)+r.doanh_thu;
   });
   const mTotals={};
-  [1,2,3].forEach(m=>{mTotals[m]=RAW_DATA.filter(r=>r.thang===m).reduce((s,r)=>s+r.doanh_thu,0);});
+  [1,2,3].forEach(m=>{mTotals[m]=data.filter(r=>r.thang===m).reduce((s,r)=>s+r.doanh_thu,0);});
   const activeChannels=Object.keys(msData).filter(ch=>Object.keys(msData[ch]).length>0);
   destroyChart('ms-trend');
   const ctxD=document.getElementById('chart-ms-trend').getContext('2d');
