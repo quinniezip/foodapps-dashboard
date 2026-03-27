@@ -651,7 +651,7 @@ function updateKpiProgress(){
   let totalRev=0;
   progGrid.innerHTML=months.map(({m,label})=>{
     const mData=RAW_DATA.filter(r=>r.thang===m);
-    const rev=mData.reduce((s,r)=>s+r.doanh_thu,0);
+    const rev=mData.reduce((s,r)=>s+r.thuc_nhan,0);
     totalRev+=rev;
     const pct=Math.min(rev/target*100,100);
     const color='#53c28b';
@@ -678,7 +678,7 @@ function updateKpiProgress(){
     if(!mData.length)return `<div class="forecast-item"><div class="forecast-label">${label}</div><div class="forecast-val">—</div></div>`;
     const dates=[...new Set(mData.map(r=>r.ngay))];
     const daysElapsed=dates.length;
-    const rev=mData.reduce((s,r)=>s+r.doanh_thu,0);
+    const rev=mData.reduce((s,r)=>s+r.thuc_nhan,0);
     const dailyAvg=rev/daysElapsed;
     const daysInMonth=m===2?28:31;
     const forecast=dailyAvg*daysInMonth;
