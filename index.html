@@ -683,8 +683,7 @@ function generateAutoInsights(){
     }
   });
   if(dropStore){
-    const code=dropStore.split(' - ')[0];
-    insights.push({icon:'📉',text:`${code} giảm mạnh nhất: -${maxDrop.toFixed(1)}% so với kỳ trước`,type:'warning'});
+    insights.push({icon:'📉',text:`${dropStore} giảm mạnh nhất: -${maxDrop.toFixed(1)}% so với kỳ trước`,type:'warning'});
   }
 
   // 2. Channel with >50% share
@@ -711,8 +710,7 @@ function generateAutoInsights(){
     if(nr>0&&nr<minNR){minNR=nr;minNRStore=s;}
   });
   if(minNRStore){
-    const code=minNRStore.split(' - ')[0];
-    insights.push({icon:'💰',text:`${code} có NR Rate thấp nhất: ${minNR.toFixed(1)}% — cần xem lại chiết khấu`,type:'info'});
+    insights.push({icon:'💰',text:`${minNRStore} có NR Rate thấp nhất: ${minNR.toFixed(1)}% — cần xem lại chiết khấu`,type:'info'});
   }
 
   const container=document.getElementById('auto-insights');
@@ -750,11 +748,9 @@ function generateRisks(){
   Object.entries(storeMonthRev).forEach(([store,mr])=>{
     if(mr[1]&&mr[2]&&mr[3]){
       if(mr[2]<mr[1]&&mr[3]<mr[2]){
-        const code=store.split(' - ')[0];
-        risks.push({severity:'HIGH',text:`${code} giảm 3 tháng liên tiếp: T1→T2→T3`});
+        risks.push({severity:'HIGH',text:`${store} giảm 3 tháng liên tiếp: T1→T2→T3`});
       }else if(mr[3]<mr[2]){
-        const code=store.split(' - ')[0];
-        risks.push({severity:'MEDIUM',text:`${code} giảm tháng gần nhất (T2→T3)`});
+        risks.push({severity:'MEDIUM',text:`${store} giảm tháng gần nhất (T2→T3)`});
       }
     }
   });
@@ -769,8 +765,7 @@ function generateRisks(){
   Object.entries(storeNR).forEach(([s,v])=>{
     const nr=v.rev>0?v.tn/v.rev*100:0;
     if(nr<50&&nr>0){
-      const code=s.split(' - ')[0];
-      risks.push({severity:'HIGH',text:`${code} NR Rate=${nr.toFixed(1)}% < 50% — margin rất thấp`});
+      risks.push({severity:'HIGH',text:`${s} NR Rate=${nr.toFixed(1)}% < 50% — margin rất thấp`});
     }
   });
 
