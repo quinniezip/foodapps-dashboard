@@ -645,12 +645,37 @@ function updateKpiProgress(){
   const target=getKpiTarget();
   document.getElementById('kpi-target-input').value=target;
   document.getElementById('kpi-target-display').textContent='= '+fmtVND(target);
-  
-  const progGrid=document.getElementById('kpi-progress-grid');
+
+  // Base filter: store & channel only (not date), to show full monthly actuals
+  const store=document.getElementById('f-store').value;
+  const channel=document.getElementById('f-channel').value;
+  const from=document.getElementById('f-from').value;
+  const to=document.getElementById('f-to').value;
+
+  const baseData=RAW_DATA.filter(r=>{
+    if(store&&r.cua_hang!==store)return false;
+    if(channel&&r.kenh!==channel)return false;
+    return true;
+  });
+
+  // Determine which months fall within the selected date range
   const months=[{m:1,label:'Tháng 1/2026'},{m:2,label:'Tháng 2/2026'},{m:3,label:'Tháng 3/2026'}];
+  const visibleMonths=months.filter(({m})=>{
+    const mFrom=`2026-${String(m).padStart(2,'0')}-01`;
+    const mTo=`2026-${String(m).padStart(2,'0')}-31`;
+    return (!from||mTo>=from)&&(!to||mFrom<=to);
+  });
+
+  const progGrid=document.getElementById('kpi-progress-grid');
   let totalRev=0;
-  progGrid.innerHTML=months.map(({m,label})=>{
-    const mData=RAW_DATA.filter(r=>r.thang===m);
+  progGrid.innerHTML=visibleMonths.map(({m,label})=>{
+    const mData=baseData.filter(r=>{
+      if(r.thang!==m)return false;
+      const iso=toISO(r.ngay);
+      if(from&&iso<from)return false;
+      if(to&&iso>to)return false;
+      return true;
+    });
     const rev=mData.reduce((s,r)=>s+r.thuc_nhan,0);
     totalRev+=rev;
     const pct=Math.min(rev/target*100,100);
@@ -663,7 +688,7 @@ function updateKpiProgress(){
   }).join('');
 
   // Quarterly
-  const totalTarget=target*3;
+  const totalTarget=target*visibleMonths.length;
   const qPct=Math.min(totalRev/totalTarget*100,100);
   const qColor='#53c28b';
   document.getElementById('quarterly-progress').innerHTML=`
@@ -673,8 +698,14 @@ function updateKpiProgress(){
 
   // Forecasts
   const forecastRow=document.getElementById('forecast-row');
-  forecastRow.innerHTML=months.map(({m,label})=>{
-    const mData=RAW_DATA.filter(r=>r.thang===m);
+  forecastRow.innerHTML=visibleMonths.map(({m,label})=>{
+    const mData=baseData.filter(r=>{
+      if(r.thang!==m)return false;
+      const iso=toISO(r.ngay);
+      if(from&&iso<from)return false;
+      if(to&&iso>to)return false;
+      return true;
+    });
     if(!mData.length)return `<div class="forecast-item"><div class="forecast-label">${label}</div><div class="forecast-val">—</div></div>`;
     const dates=[...new Set(mData.map(r=>r.ngay))];
     const daysElapsed=dates.length;
