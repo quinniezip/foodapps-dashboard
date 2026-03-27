@@ -190,6 +190,44 @@ table tr:hover td{background:#f8fafc}
 }
 .scrollable-list{max-height:280px;overflow-y:auto}
 .no-data{text-align:center;color:var(--text2);padding:20px;font-size:0.85rem}
+/* STORE COMPARISON */
+.compare-selectors{display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.compare-selectors label{font-size:0.82rem;font-weight:600;color:var(--text2)}
+.compare-selectors select{border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:0.82rem;background:#fff;color:var(--text);outline:none;min-width:200px;cursor:pointer}
+.compare-selectors select:focus{border-color:var(--cyan)}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.compare-col{background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:14px}
+.compare-col-header{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:2px solid var(--border)}
+.compare-col-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.compare-col-name{font-size:0.9rem;font-weight:700;color:var(--navy);line-height:1.3}
+.compare-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.compare-kpi-item{background:#f8fafc;border-radius:10px;padding:12px;text-align:center}
+.compare-kpi-val{font-size:1rem;font-weight:800;color:var(--navy);line-height:1}
+.compare-kpi-label{font-size:0.68rem;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+.compare-kpi-badge{font-size:0.68rem;font-weight:700;padding:2px 6px;border-radius:8px;margin-top:4px;display:inline-block}
+.compare-section-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px}
+.compare-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.compare-bar-label{font-size:0.75rem;color:var(--text);min-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compare-bar-track{flex:1;background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden}
+.compare-bar-fill{height:100%;border-radius:4px;transition:width 0.5s ease}
+.compare-bar-val{font-size:0.72rem;color:var(--text2);min-width:55px;text-align:right}
+.compare-vs{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:0 8px}
+.compare-vs-badge{font-size:0.8rem;font-weight:800;color:var(--text2);background:#f1f5f9;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.compare-stat-table{width:100%;font-size:0.78rem;border-collapse:collapse}
+.compare-stat-table td{padding:5px 8px;border-bottom:1px solid var(--border)}
+.compare-stat-table td:first-child{color:var(--text2)}
+.compare-stat-table td:last-child{font-weight:700;text-align:right}
+.compare-placeholder{display:flex;align-items:center;justify-content:center;height:120px;color:var(--text2);font-size:0.85rem;background:#f8fafc;border-radius:8px}
+.compare-better{color:#065f46;background:#d1fae5}
+.compare-worse{color:#991b1b;background:#fee2e2}
+.compare-equal{color:#64748b;background:#f1f5f9}
+/* EXPORT BTN */
+.btn-export{background:linear-gradient(135deg,#0f3460,#1a4a8a);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity 0.2s}
+.btn-export:hover{opacity:0.85}
+@media(max-width:768px){
+  .compare-grid{grid-template-columns:1fr}
+  .compare-kpi-row{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
@@ -215,6 +253,7 @@ table tr:hover td{background:#f8fafc}
   <div class="nav-section">
     <div class="nav-section-title">Kênh bán hàng</div>
     <a class="nav-link" onclick="scrollTo_('sec-channel')"><span class="nav-icon">📡</span>Channel Intelligence</a>
+    <a class="nav-link" onclick="scrollTo_('sec-compare')"><span class="nav-icon">⚖️</span>Store Comparison</a>
   </div>
   <div class="nav-section">
     <div class="nav-section-title">Xu hướng</div>
@@ -272,6 +311,7 @@ table tr:hover td{background:#f8fafc}
     </select>
   </div>
   <button class="btn btn-reset" onclick="resetFilters()">↺ Reset</button>
+  <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
 </div>
 
 <!-- CONTENT -->
@@ -327,7 +367,32 @@ table tr:hover td{background:#f8fafc}
   <div class="kpi-cards-grid" id="kpi-cards"></div>
 </div>
 
-<!-- 5. CHANNEL INTELLIGENCE -->
+<!-- 5. STORE COMPARISON -->
+<div id="sec-compare">
+  <div class="section-title">⚖️ Store Comparison</div>
+  <div class="card">
+    <div class="compare-selectors">
+      <div>
+        <label>🔵 Cửa hàng A</label><br>
+        <select id="cmp-store-a" onchange="updateStoreComparison()">
+          <option value="">-- Chọn cửa hàng --</option>
+        </select>
+      </div>
+      <div class="compare-vs">
+        <div class="compare-vs-badge">VS</div>
+      </div>
+      <div>
+        <label>🔴 Cửa hàng B</label><br>
+        <select id="cmp-store-b" onchange="updateStoreComparison()">
+          <option value="">-- Chọn cửa hàng --</option>
+        </select>
+      </div>
+    </div>
+    <div id="compare-content"><div class="compare-placeholder">Chọn 2 cửa hàng để so sánh</div></div>
+  </div>
+</div>
+
+<!-- 6. CHANNEL INTELLIGENCE -->
 <div id="sec-channel">
   <div class="section-title">📡 Channel Intelligence</div>
   <div class="channel-grid">
@@ -1414,6 +1479,192 @@ function scrollTo_(id){
 }
 
 // ============================================================
+// EXPORT CSV
+// ============================================================
+function exportCSV(){
+  const data=getFilteredData();
+  const headers=['Ngày','Tháng','Tuần','Cửa hàng','Kênh','Số đơn','Doanh thu','Thực nhận','Chiết khấu','TB đơn hàng','Chi phí QC','Thuế'];
+  const rows=data.map(r=>[r.ngay,r.thang,r.tuan,r.cua_hang,r.kenh,r.so_don,r.doanh_thu,r.thuc_nhan,r.chiet_khau,r.tb_don_hang,r.chi_phi_qc,r.thue]);
+  const csv=[headers,...rows].map(row=>row.map(v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`foodapps_data_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// STORE COMPARISON
+// ============================================================
+function initCompareDropdowns(){
+  const stores=[...new Set(RAW_DATA.map(r=>r.cua_hang))].sort();
+  ['cmp-store-a','cmp-store-b'].forEach(id=>{
+    const sel=document.getElementById(id);
+    const cur=sel.value;
+    while(sel.options.length>1)sel.remove(1);
+    stores.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+    if(cur)sel.value=cur;
+  });
+}
+
+function updateStoreComparison(){
+  const storeA=document.getElementById('cmp-store-a').value;
+  const storeB=document.getElementById('cmp-store-b').value;
+  const container=document.getElementById('compare-content');
+  if(!storeA||!storeB){
+    container.innerHTML='<div class="compare-placeholder">Chọn 2 cửa hàng để so sánh</div>';
+    return;
+  }
+  if(storeA===storeB){
+    container.innerHTML='<div class="compare-placeholder">Vui lòng chọn 2 cửa hàng khác nhau</div>';
+    return;
+  }
+  const filtered=getFilteredData();
+  const dataA=filtered.filter(r=>r.cua_hang===storeA);
+  const dataB=filtered.filter(r=>r.cua_hang===storeB);
+  if(!dataA.length&&!dataB.length){
+    container.innerHTML='<div class="compare-placeholder">Không có dữ liệu cho 2 cửa hàng này trong khoảng thời gian đã chọn</div>';
+    return;
+  }
+  const mA=aggregate(dataA);
+  const mB=aggregate(dataB);
+
+  // Channel breakdown
+  const chA={},chB={};
+  CHANNELS.forEach(c=>{chA[c]=0;chB[c]=0;});
+  dataA.forEach(r=>chA[r.kenh]=(chA[r.kenh]||0)+r.doanh_thu);
+  dataB.forEach(r=>chB[r.kenh]=(chB[r.kenh]||0)+r.doanh_thu);
+  const topChA=Object.entries(chA).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const topChB=Object.entries(chB).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Health scores
+  const allScores=computeStoreHealthScores(filtered);
+  const hsA=allScores.find(s=>s.name===storeA);
+  const hsB=allScores.find(s=>s.name===storeB);
+  const scoreA=hsA?hsA.score:0;
+  const scoreB=hsB?hsB.score:0;
+
+  function cmpBadge(a,b,higherBetter=true){
+    if(a===0&&b===0)return '<span class="compare-kpi-badge compare-equal">—</span>';
+    const aBetter=higherBetter?a>b:a<b;
+    const bBetter=higherBetter?b>a:b<a;
+    return aBetter?'<span class="compare-kpi-badge compare-better">▲ Tốt hơn</span>':
+           bBetter?'<span class="compare-kpi-badge compare-worse">▼ Kém hơn</span>':
+                   '<span class="compare-kpi-badge compare-equal">= Bằng</span>';
+  }
+
+  function renderChannelBars(topCh,totalRev){
+    if(!topCh.length)return '<div style="color:var(--text2);font-size:0.78rem;padding:8px">Không có dữ liệu</div>';
+    const maxVal=topCh[0][1];
+    return topCh.map(([ch,val])=>{
+      const color=CHANNEL_COLORS[ch]||'#94a3b8';
+      const pct=maxVal>0?val/maxVal*100:0;
+      const share=totalRev>0?val/totalRev*100:0;
+      return `<div class="compare-bar-row">
+        <div class="compare-bar-label" title="${ch}">${ch}</div>
+        <div class="compare-bar-track"><div class="compare-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="compare-bar-val">${share.toFixed(1)}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  const shortA=storeA.length>30?storeA.slice(0,30)+'…':storeA;
+  const shortB=storeB.length>30?storeB.slice(0,30)+'…':storeB;
+
+  container.innerHTML=`
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="compare-col-header">
+        <div class="compare-col-dot" style="background:#3b82f6"></div>
+        <div class="compare-col-name" title="${storeA}">${shortA}</div>
+      </div>
+      <div class="compare-kpi-row">
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtVND(mA.rev)}</div>
+          <div class="compare-kpi-label">Doanh thu</div>
+          ${cmpBadge(mA.rev,mB.rev)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtPct(mA.nr)}</div>
+          <div class="compare-kpi-label">NR Rate</div>
+          ${cmpBadge(mA.nr,mB.nr)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtPct(mA.gm)}</div>
+          <div class="compare-kpi-label">GM%</div>
+          ${cmpBadge(mA.gm,mB.gm)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmt(mA.orders)}</div>
+          <div class="compare-kpi-label">Đơn hàng</div>
+          ${cmpBadge(mA.orders,mB.orders)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtVND(mA.rpo)}</div>
+          <div class="compare-kpi-label">DT/Đơn</div>
+          ${cmpBadge(mA.rpo,mB.rpo)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val" style="color:${scoreA>=80?'#10b981':scoreA>=60?'#f59e0b':scoreA>=40?'#eab308':'#ef4444'}">${scoreA}</div>
+          <div class="compare-kpi-label">Health Score</div>
+          ${cmpBadge(scoreA,scoreB)}
+        </div>
+      </div>
+      <div>
+        <div class="compare-section-title">Top kênh theo doanh thu</div>
+        ${renderChannelBars(topChA,mA.rev)}
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-col-header">
+        <div class="compare-col-dot" style="background:#ef4444"></div>
+        <div class="compare-col-name" title="${storeB}">${shortB}</div>
+      </div>
+      <div class="compare-kpi-row">
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtVND(mB.rev)}</div>
+          <div class="compare-kpi-label">Doanh thu</div>
+          ${cmpBadge(mB.rev,mA.rev)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtPct(mB.nr)}</div>
+          <div class="compare-kpi-label">NR Rate</div>
+          ${cmpBadge(mB.nr,mA.nr)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtPct(mB.gm)}</div>
+          <div class="compare-kpi-label">GM%</div>
+          ${cmpBadge(mB.gm,mA.gm)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmt(mB.orders)}</div>
+          <div class="compare-kpi-label">Đơn hàng</div>
+          ${cmpBadge(mB.orders,mA.orders)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val">${fmtVND(mB.rpo)}</div>
+          <div class="compare-kpi-label">DT/Đơn</div>
+          ${cmpBadge(mB.rpo,mA.rpo)}
+        </div>
+        <div class="compare-kpi-item">
+          <div class="compare-kpi-val" style="color:${scoreB>=80?'#10b981':scoreB>=60?'#f59e0b':scoreB>=40?'#eab308':'#ef4444'}">${scoreB}</div>
+          <div class="compare-kpi-label">Health Score</div>
+          ${cmpBadge(scoreB,scoreA)}
+        </div>
+      </div>
+      <div>
+        <div class="compare-section-title">Top kênh theo doanh thu</div>
+        ${renderChannelBars(topChB,mB.rev)}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
 // UPDATE ALL
 // ============================================================
 function updateAll(){
@@ -1428,6 +1679,7 @@ function updateAll(){
   updateHealthGrid();
   updateStoreSummary();
   updateDataTable();
+  updateStoreComparison();
 }
 
 // ============================================================
@@ -1443,6 +1695,7 @@ document.getElementById('f-channel').addEventListener('change',updateAll);
 // INIT
 // ============================================================
 initStoresDropdown();
+initCompareDropdowns();
 renderActionItems();
 updateAll();
 
