@@ -1060,7 +1060,7 @@ function updateTopStoresChart(){
   charts['topstores']=new Chart(ctx,{
     type:'bar',
     data:{
-      labels:sorted.map(([s])=>s.split(' - ').slice(1).join(' - ')||s),
+      labels:sorted.map(([s])=>s),
       datasets:[
         {label:'Kỳ này',data:vals,backgroundColor:bgColors,borderRadius:4},
         {label:'Kỳ trước',data:priorVals,backgroundColor:'rgba(148,163,184,0.4)',borderRadius:4}
@@ -1087,8 +1087,7 @@ function updateTopStoresChart(){
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:#f8fafc;margin-bottom:6px">
       <div style="width:10px;height:10px;border-radius:50%;background:${top5Colors[i]};flex-shrink:0"></div>
       <div style="flex:1">
-        <div class="text-xs font-bold text-navy">${s.split(' - ')[0]}</div>
-        <div class="text-xs text-muted">${s.split(' - ').slice(1).join(' - ')}</div>
+        <div class="text-xs font-bold text-navy">${s}</div>
       </div>
       <div style="text-align:right">
         <div class="text-xs font-bold">${(v/1000000).toFixed(1)}M</div>
@@ -1166,7 +1165,7 @@ function updateHealthGrid(){
   const grid=document.getElementById('health-grid');
   grid.innerHTML=sorted.map(([store,info])=>{
     const code=store.split(' - ')[0];
-    const name=store.split(' - ').slice(1).join(' - ');
+    const name=store;
     const s=info.score;
     const cls=s>=80?'score-green':s>=60?'score-orange':s>=40?'score-yellow':'score-red';
     const statusCls=s>=80?'status-good':s>=60?'status-avg':s>=40?'status-warn':'status-risk';
@@ -1174,7 +1173,7 @@ function updateHealthGrid(){
     return `<div class="health-card">
       <div class="health-score-wrap">
         <div class="health-score ${cls}">${s}</div>
-        <div><div class="health-store-name">${name||code}</div><div class="health-store-code">${code}</div></div>
+        <div><div class="health-store-name">${name}</div></div>
       </div>
       <div class="health-stats">
         <div class="health-stat"><div class="health-stat-val">${info.nr}%</div><div class="health-stat-label">NR Rate</div></div>
@@ -1238,7 +1237,7 @@ function renderSummaryTable(){
     const dArrow=r.delta>=0?'▲':'▼';
     const hCls=r.health>=80?'status-good':r.health>=60?'status-avg':r.health>=40?'status-warn':'status-risk';
     return `<tr>
-      <td>${r.store.split(' - ')[0]}<br><span class="text-xs text-muted">${r.store.split(' - ').slice(1).join(' - ')}</span></td>
+      <td>${r.store}</td>
       <td class="td-num">${fmtVND(r.rev)}<br><span class="delta-badge ${dClass}" style="font-size:0.62rem">${dArrow}${Math.abs(r.delta).toFixed(1)}%</span></td>
       <td class="td-num">${fmtVND(r.tn)}</td>
       <td class="td-num" style="color:${r.nr>=60?'#10b981':r.nr>=50?'#f59e0b':'#ef4444'}">${r.nr}%</td>
@@ -1285,7 +1284,7 @@ function renderDataTable(){
       <td>${r.ngay}</td>
       <td class="td-num">${r.thang}</td>
       <td class="td-num">${r.tuan}</td>
-      <td>${r.cua_hang.split(' - ')[0]}<br><span class="text-xs text-muted">${r.cua_hang.split(' - ').slice(1).join(' - ')}</span></td>
+      <td>${r.cua_hang}</td>
       <td><span class="channel-badge" style="background:${chColor}22;color:${chColor}">${r.kenh}</span></td>
       <td class="td-num">${fmt(r.so_don)}</td>
       <td class="td-num">${fmtVND(r.doanh_thu)}</td>
