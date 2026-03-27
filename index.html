@@ -31,7 +31,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* MAIN */
 .main{flex:1;min-width:0;display:flex;flex-direction:column;margin-left:260px}
 /* FILTERS */
-.filters-bar{background:#fff;padding:12px 24px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:80;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.filters-bar{background:#fff;padding:12px 24px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--border);position:fixed;left:260px;right:0;z-index:80;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
 .filter-group{display:flex;align-items:center;gap:6px}
 .filter-group label{font-size:0.78rem;color:var(--text2);font-weight:500;white-space:nowrap}
 .filter-group input,.filter-group select{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.78rem;background:#fff;color:var(--text);outline:none;transition:border-color 0.2s}
@@ -42,7 +42,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-primary{background:var(--navy2);color:#fff}
 .btn-primary:hover{background:var(--navy)}
 /* CONTENT */
-.content{padding:20px 24px;display:flex;flex-direction:column;gap:24px}
+.content{padding:20px 24px;display:flex;flex-direction:column;gap:24px;padding-top:74px}
 /* SECTION */
 .section-title{font-size:1rem;font-weight:700;color:var(--navy2);padding-left:12px;border-left:4px solid var(--navy2);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
 /* CARDS */
@@ -183,6 +183,7 @@ table tr:hover td{background:#f8fafc}
   .layout{flex-direction:column}
   .sidebar{width:100%;height:auto;position:static}
   .main{margin-left:0}
+  .filters-bar{position:sticky;top:0;left:0;right:0}
   .intel-grid,.kpi-cards-grid,.channel-grid,.kpi-progress-grid,.health-grid{grid-template-columns:1fr}
   .trend-grid,.dow-grid,.top-stores-grid{grid-template-columns:1fr}
   .forecast-row{grid-template-columns:1fr 1fr}
@@ -1443,6 +1444,19 @@ document.getElementById('f-channel').addEventListener('change',updateAll);
 initStoresDropdown();
 renderActionItems();
 updateAll();
+
+// Pin filter bar just below the sticky header
+function positionFiltersBar(){
+  const hdr=document.querySelector('.header');
+  const fb=document.querySelector('.filters-bar');
+  const content=document.querySelector('.content');
+  if(!hdr||!fb) return;
+  const hh=hdr.offsetHeight;
+  fb.style.top=hh+'px';
+  if(content) content.style.paddingTop=(fb.offsetHeight+20)+'px';
+}
+positionFiltersBar();
+window.addEventListener('resize',positionFiltersBar);
 </script>
 </body>
 </html>
