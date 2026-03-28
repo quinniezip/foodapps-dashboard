@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FoodApps Dashboard 2026 — Phúc Tea</title>
+<!-- Ẩn app ngay trước khi trang render, tránh flash nội dung -->
+<style id="auth-guard">#app{display:none!important}</style>
+<script>if(sessionStorage.getItem('auth_user')){document.getElementById('auth-guard').remove()}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ============================================================
@@ -27,7 +30,7 @@ async function doLogin() {
   sessionStorage.setItem('auth_user', u);
   sessionStorage.setItem('auth_label', USERS[u].label);
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').classList.remove('hidden');
+  const g = document.getElementById('auth-guard'); if(g) g.remove();
   updateUserBadge();
 }
 function doLogout() {
@@ -65,8 +68,7 @@ window.addEventListener('DOMContentLoaded', () => {
 .login-btn{width:100%;background:linear-gradient(135deg,#0f2447,#0f3460);color:#fff;border:none;border-radius:8px;padding:12px;font-size:0.95rem;font-weight:600;cursor:pointer;margin-top:4px;transition:opacity 0.2s}
 .login-btn:hover{opacity:0.9}
 .login-err{color:#e94560;font-size:0.78rem;text-align:center;margin-top:10px;min-height:18px}
-#app{display:contents}
-#app.hidden{display:none}
+#app{display:flex;flex-direction:column;flex:1;min-height:0}
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --navy:#0f2447;--navy2:#0f3460;--red:#e94560;--green:#53c28b;--orange:#f5a623;
@@ -275,7 +277,7 @@ table tr:hover td{background:#f8fafc}
 </div>
 
 <!-- APP -->
-<div id="app" class="hidden">
+<div id="app">
 <!-- HEADER -->
 <div class="header">
   <div>
