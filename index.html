@@ -1640,7 +1640,7 @@ function positionFiltersBar(){
   const sb=document.getElementById('sidebar');
   const layout=document.querySelector('.layout');
   const content=document.querySelector('.content');
-  const sbWidth=sb ? sb.offsetWidth : 220;
+  const sbWidth=sb ? (sb.classList.contains('collapsed') ? 48 : 220) : 220;
   // Header bắt đầu ngay bên phải sidebar
   if(hdr) hdr.style.left=sbWidth+'px';
   const hh=hdr ? hdr.offsetHeight : 0;
@@ -1674,6 +1674,7 @@ function toggleSidebar(){
     if(sb){ sb.classList.add('collapsed'); const t=sb.querySelector('.sidebar-toggle'); if(t) t.textContent='⟩'; }
     if(fb) fb.classList.add('sidebar-collapsed');
   }
+  positionFiltersBar(); // Re-run after sidebar state is restored
 })();
 </script>
 </div><!-- /app -->
