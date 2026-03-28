@@ -1461,7 +1461,9 @@ async function loadAndInit() {
       const obj = {};
       headers.forEach((h, i) => {
         const v = vals[i] || '';
-        obj[h.trim()] = ['so_don','chiet_khau','giam_gia','doanh_thu','thuc_nhan','tb_don_hang','chi_phi_qc','thue','thang','tuan'].includes(h.trim()) ? parseFloat(v)||0 : v.trim();
+        const numFields = ['so_don','chiet_khau','giam_gia','doanh_thu','thuc_nhan','tb_don_hang','chi_phi_qc','thue','thang','tuan','nam'];
+        // Handle Vietnamese number format: dots as thousands separators (e.g. "36.750" → 36750)
+        obj[h.trim()] = numFields.includes(h.trim()) ? (parseFloat(v.replace(/\./g,'').replace(',','.')) || 0) : v.trim();
       });
       return obj;
     });
