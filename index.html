@@ -1448,7 +1448,17 @@ async function loadAndInit() {
     const resp = await fetch('data.csv?v=' + Date.now());
     const text = await resp.text();
     const lines = text.trim().split('\n');
-    const headers = lines[0].split(',');
+    const rawHeaders = lines[0].split(',').map(h => h.trim().replace(/^\uFEFF/,''));
+    // Map Vietnamese headers → internal field names
+    const HEADER_MAP = {
+      'NĂM':'nam','NGÀY':'ngay','THÁNG':'thang','TUẦN':'tuan',
+      'CỬA HÀNG':'cua_hang','KÊNH BÁN HÀNG':'kenh',
+      'SỐ LƯỢNG ĐƠN HÀNG':'so_don','CHIẾT KHẤU':'chiet_khau',
+      'GIẢM GIÁ':'giam_gia','DOANH THU':'doanh_thu','THỰC NHẬN':'thuc_nhan',
+      'TRUNG BÌNH ĐƠN HÀNG':'tb_don_hang','CHI PHÍ QUẢNG CÁO':'chi_phi_qc','THUẾ':'thue'
+    };
+    const headers = rawHeaders.map(h => HEADER_MAP[h] || h);
+    const numFields = new Set(['so_don','chiet_khau','giam_gia','doanh_thu','thuc_nhan','tb_don_hang','chi_phi_qc','thue','thang','tuan','nam']);
     RAW_DATA = lines.slice(1).map(line => {
       const vals = [];
       let cur = '', inQ = false;
@@ -1460,13 +1470,12 @@ async function loadAndInit() {
       vals.push(cur);
       const obj = {};
       headers.forEach((h, i) => {
-        const v = vals[i] || '';
-        const numFields = ['so_don','chiet_khau','giam_gia','doanh_thu','thuc_nhan','tb_don_hang','chi_phi_qc','thue','thang','tuan','nam'];
+        const v = (vals[i] || '').trim();
         // Handle Vietnamese number format: dots as thousands separators (e.g. "36.750" → 36750)
-        obj[h.trim()] = numFields.includes(h.trim()) ? (parseFloat(v.replace(/\./g,'').replace(',','.')) || 0) : v.trim();
+        obj[h] = numFields.has(h) ? (parseFloat(v.replace(/\./g,'').replace(',','.')) || 0) : v;
       });
       return obj;
-    });
+    }).filter(r => r.ngay);
     console.log('Loaded', RAW_DATA.length, 'rows from data.csv');
   } catch(e) {
     console.error('Cannot load data.csv:', e);
