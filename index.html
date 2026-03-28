@@ -13,8 +13,9 @@
 // AUTH — kiểm tra session trước khi load dashboard
 // ============================================================
 const USERS = {
-  'ceo': { hash: 'b2ca8093b1893c8a9590335d64f5a9694b40072fe95ad2eab96d9a033bdebb59', label: 'CEO' },
-  'ta':  { hash: 'd061bc5a327e489c38641b7c40bb790dab8c10045e302f8734c2edc64e6f9abb', label: 'TA'  }
+  'quinnie_zip': { hash: 'fc2b6899bcc0d0c855f45d7388382a042d874b95a072c5dce8297b1798a982df', label: 'Owner' },
+  'ceo':         { hash: 'b2ca8093b1893c8a9590335d64f5a9694b40072fe95ad2eab96d9a033bdebb59', label: 'CEO'   },
+  'ta':          { hash: 'd061bc5a327e489c38641b7c40bb790dab8c10045e302f8734c2edc64e6f9abb', label: 'TA'    }
 };
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
