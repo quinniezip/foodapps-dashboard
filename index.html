@@ -573,8 +573,8 @@ function getPriorData(){
 }
 
 function resetFilters(){
-  document.getElementById('f-from').value='2026-01-01';
-  document.getElementById('f-to').value='2026-03-09';
+  document.getElementById('f-from').value=window._dataMinDate||'';
+  document.getElementById('f-to').value=window._dataMaxDate||'';
   document.getElementById('f-week').value='';
   document.getElementById('f-store').value='';
   document.getElementById('f-channel').value='';
@@ -1477,6 +1477,35 @@ async function loadAndInit() {
       return obj;
     }).filter(r => r.ngay);
     console.log('Loaded', RAW_DATA.length, 'rows from data.csv');
+    // Set date filter range dynamically from data
+    const allISO = RAW_DATA.map(r => toISO(r.ngay)).sort();
+    const minDate = allISO[0], maxDate = allISO[allISO.length-1];
+    document.getElementById('f-from').value = minDate;
+    document.getElementById('f-to').value = maxDate;
+    window._dataMinDate = minDate;
+    window._dataMaxDate = maxDate;
+    // Build week dropdown dynamically
+    const weekSet = new Set();
+    RAW_DATA.forEach(r => { if(r.tuan) weekSet.add(`${r.thang}-${r.tuan}`); });
+    const weekSel = document.getElementById('f-week');
+    weekSel.innerHTML = '<option value="">-- Tất cả --</option>';
+    [...weekSet].sort((a,b)=>{
+      const [am,aw]=a.split('-').map(Number), [bm,bw]=b.split('-').map(Number);
+      return am!==bm ? am-bm : aw-bw;
+    }).forEach(key => {
+      const [m,w] = key.split('-');
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = `Tuần ${w} – Tháng ${m}`;
+      weekSel.appendChild(opt);
+    });
+    // Update header badge
+    const badge = document.querySelector('.header-badge');
+    if(badge) {
+      const stores = new Set(RAW_DATA.map(r=>r.cua_hang)).size;
+      const channels = new Set(RAW_DATA.map(r=>r.kenh)).size;
+      const fmt = iso => iso.split('-').reverse().join('/');
+      badge.textContent = `📅 Dữ liệu: ${fmt(minDate)} – ${fmt(maxDate)} | ${stores} cửa hàng | ${channels} kênh`;
+    }
   } catch(e) {
     console.error('Cannot load data.csv:', e);
   }
