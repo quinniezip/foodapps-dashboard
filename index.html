@@ -500,36 +500,52 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
 <div id="sec-health">
   <div class="section-title">🏥 Store Health Dashboard</div>
 
-  <div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:12px;color:#334">
-    <div style="font-weight:700;color:#0f2447;margin-bottom:10px;font-size:13px">📐 Cách tính Store Health Score (0–100)</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:10px">
-      <div style="background:white;border-radius:8px;padding:8px 12px;border-left:3px solid #0f3460">
-        <div style="font-weight:700;color:#0f3460">Net Revenue Rate <span style="float:right;color:#888">30 pts</span></div>
-        <div style="color:#555;margin-top:2px">Thực nhận / Doanh thu gộp — so với TB hệ thống</div>
-      </div>
-      <div style="background:white;border-radius:8px;padding:8px 12px;border-left:3px solid #e94560">
-        <div style="font-weight:700;color:#e94560">Gross Margin % <span style="float:right;color:#888">25 pts</span></div>
-        <div style="color:#555;margin-top:2px">(Thực nhận − CP QC − Thuế) / Doanh thu — so với TB hệ thống</div>
-      </div>
-      <div style="background:white;border-radius:8px;padding:8px 12px;border-left:3px solid #f5a623">
-        <div style="font-weight:700;color:#f5a623">Doanh Thu / Đơn <span style="float:right;color:#888">20 pts</span></div>
-        <div style="color:#555;margin-top:2px">Doanh thu / Số đơn hàng — so với TB hệ thống</div>
-      </div>
-      <div style="background:white;border-radius:8px;padding:8px 12px;border-left:3px solid #53c28b">
-        <div style="font-weight:700;color:#53c28b">Xu hướng tuần <span style="float:right;color:#888">15 pts</span></div>
-        <div style="color:#555;margin-top:2px">Tuần gần nhất ≥ tuần trước → 15 pts, ngược lại → 0 pts</div>
-      </div>
-      <div style="background:white;border-radius:8px;padding:8px 12px;border-left:3px solid #a855f7">
-        <div style="font-weight:700;color:#a855f7">Đa dạng kênh <span style="float:right;color:#888">10 pts</span></div>
-        <div style="color:#555;margin-top:2px">Số kênh đang dùng / số kênh tối đa trong hệ thống</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2)">📐 Cách tính Health Score (0–100)</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);padding:2px 10px;border-radius:6px;font-size:0.65rem;font-weight:700">80–100 Tốt</span>
+        <span style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);padding:2px 10px;border-radius:6px;font-size:0.65rem;font-weight:700">60–79 Trung bình</span>
+        <span style="background:rgba(234,179,8,0.15);color:#facc15;border:1px solid rgba(234,179,8,0.3);padding:2px 10px;border-radius:6px;font-size:0.65rem;font-weight:700">40–59 Chú ý</span>
+        <span style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:2px 10px;border-radius:6px;font-size:0.65rem;font-weight:700">0–39 Rủi ro</span>
       </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px">
-      <span style="background:#10b981;color:white;padding:2px 10px;border-radius:10px;font-weight:700">🟢 80–100 Tốt</span>
-      <span style="background:#f59e0b;color:white;padding:2px 10px;border-radius:10px;font-weight:700">🟠 60–79 Trung bình</span>
-      <span style="background:#eab308;color:white;padding:2px 10px;border-radius:10px;font-weight:700">🟡 40–59 Cần chú ý</span>
-      <span style="background:#ef4444;color:white;padding:2px 10px;border-radius:10px;font-weight:700">🔴 0–39 Rủi ro</span>
-      <span style="color:#666;margin-left:4px">• Điểm NR/GM/RPO tính tương đối so với TB hệ thống — cửa hàng tốt hơn TB được điểm cao hơn</span>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+      <div style="background:var(--card2);border-radius:8px;padding:10px 12px;border-top:2px solid #6366f1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:0.72rem;font-weight:700;color:#818cf8">NR Rate</span>
+          <span style="background:rgba(99,102,241,0.2);color:#818cf8;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:4px">30 pts</span>
+        </div>
+        <div style="font-size:0.68rem;color:var(--text2);line-height:1.4">Thực nhận / Doanh thu — so với TB hệ thống</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:10px 12px;border-top:2px solid #ef4444">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:0.72rem;font-weight:700;color:#f87171">Gross Margin</span>
+          <span style="background:rgba(239,68,68,0.2);color:#f87171;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:4px">25 pts</span>
+        </div>
+        <div style="font-size:0.68rem;color:var(--text2);line-height:1.4">(Thực nhận − CP QC − Thuế) / DT so với TB</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:10px 12px;border-top:2px solid #f59e0b">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:0.72rem;font-weight:700;color:#fbbf24">DT / Đơn</span>
+          <span style="background:rgba(245,158,11,0.2);color:#fbbf24;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:4px">20 pts</span>
+        </div>
+        <div style="font-size:0.68rem;color:var(--text2);line-height:1.4">Doanh thu / Số đơn — so với TB hệ thống</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:10px 12px;border-top:2px solid #22c55e">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:0.72rem;font-weight:700;color:#4ade80">Xu hướng</span>
+          <span style="background:rgba(34,197,94,0.2);color:#4ade80;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:4px">15 pts</span>
+        </div>
+        <div style="font-size:0.68rem;color:var(--text2);line-height:1.4">Tuần gần nhất ≥ tuần trước → 15 pts</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:10px 12px;border-top:2px solid #a855f7">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:0.72rem;font-weight:700;color:#c084fc">Đa kênh</span>
+          <span style="background:rgba(168,85,247,0.2);color:#c084fc;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:4px">10 pts</span>
+        </div>
+        <div style="font-size:0.68rem;color:var(--text2);line-height:1.4">Số kênh dùng / tổng kênh hệ thống</div>
+      </div>
     </div>
   </div>
 
