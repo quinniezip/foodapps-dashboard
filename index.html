@@ -621,9 +621,16 @@ let RAW_DATA = [];
 // ============================================================
 const CHANNELS = ['ShopeeFood','GrabFood','BeFood','Goka','Iloka','Hoả Tốc 247','VILL','Xanh Ngon'];
 const CHANNEL_COLORS = {
-  ShopeeFood:'#e94560',GrabFood:'#00b14f',BeFood:'#f5a623',
-  Goka:'#06b6d4',Iloka:'#a855f7','Hoả Tốc 247':'#f97316',
-  VILL:'#3b82f6','Xanh Ngon':'#10b981'
+  GrabFood:'#00b14f',    // Grab xanh lá
+  ShopeeFood:'#ee4d2d',  // Shopee cam đỏ
+  BeFood:'#f5c518',      // Be vàng
+  Gojek:'#00aaa0',       // Gojek xanh teal
+  Godi:'#ff6b35',        // Godi cam
+  Goka:'#06b6d4',        // Goka cyan
+  Iloka:'#a855f7',       // Iloka tím
+  'Hoả Tốc 247':'#f97316', // Hoả Tốc cam đậm
+  VILL:'#3b82f6',        // VILL xanh dương
+  'Xanh Ngon':'#10b981'  // Xanh Ngon xanh lá nhạt
 };
 const DOW_LABELS = ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','CN'];
 const MONTHS = [1,2,3];
@@ -1015,7 +1022,7 @@ function updateChannelCharts(){
   });
   const nrLabels=Object.keys(chNR).sort((a,b)=>chNR[b].tn/chNR[b].rev-chNR[a].tn/chNR[a].rev);
   const nrVals=nrLabels.map(k=>chNR[k].rev>0?chNR[k].tn/chNR[k].rev*100:0);
-  const nrColors=nrVals.map(v=>v>=60?'#53c28b':v>=50?'#f5a623':'#e94560');
+  const nrColors=nrLabels.map(k=>CHANNEL_COLORS[k]||'#94a3b8');
 
   destroyChart('nr-rate');
   const ctxB=document.getElementById('chart-nr-rate').getContext('2d');
