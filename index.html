@@ -5,7 +5,68 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FoodApps Dashboard 2026 — Phúc Tea</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ============================================================
+// AUTH — kiểm tra session trước khi load dashboard
+// ============================================================
+const USERS = {
+  'ceo': { hash: 'b2ca8093b1893c8a9590335d64f5a9694b40072fe95ad2eab96d9a033bdebb59', label: 'CEO' },
+  'ta':  { hash: 'd061bc5a327e489c38641b7c40bb790dab8c10045e302f8734c2edc64e6f9abb', label: 'TA'  }
+};
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toLowerCase();
+  const p = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  if (!USERS[u]) { err.textContent = 'Tài khoản không tồn tại.'; return; }
+  const h = await sha256(p);
+  if (h !== USERS[u].hash) { err.textContent = 'Mật khẩu không đúng.'; return; }
+  sessionStorage.setItem('auth_user', u);
+  sessionStorage.setItem('auth_label', USERS[u].label);
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.remove('hidden');
+  updateUserBadge();
+}
+function doLogout() {
+  sessionStorage.removeItem('auth_user');
+  sessionStorage.removeItem('auth_label');
+  location.reload();
+}
+function updateUserBadge() {
+  const label = sessionStorage.getItem('auth_label');
+  const el = document.getElementById('user-badge');
+  if (el && label) el.textContent = '👤 ' + label;
+}
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('auth_user')) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = '';
+    updateUserBadge();
+  }
+  document.getElementById('login-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+</script>
 <style>
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0f2447 0%,#1a3a6e 60%,#0f3460 100%);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:#fff;border-radius:16px;padding:40px 36px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.login-logo{text-align:center;font-size:2rem;margin-bottom:6px}
+.login-title{text-align:center;font-size:1.2rem;font-weight:700;color:#0f2447;margin-bottom:4px}
+.login-sub{text-align:center;font-size:0.78rem;color:#64748b;margin-bottom:28px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:6px}
+.login-field input{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:0.9rem;outline:none;transition:border-color 0.2s}
+.login-field input:focus{border-color:#0f3460}
+.login-btn{width:100%;background:linear-gradient(135deg,#0f2447,#0f3460);color:#fff;border:none;border-radius:8px;padding:12px;font-size:0.95rem;font-weight:600;cursor:pointer;margin-top:4px;transition:opacity 0.2s}
+.login-btn:hover{opacity:0.9}
+.login-err{color:#e94560;font-size:0.78rem;text-align:center;margin-top:10px;min-height:18px}
+#app{display:contents}
+#app.hidden{display:none}
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --navy:#0f2447;--navy2:#0f3460;--red:#e94560;--green:#53c28b;--orange:#f5a623;
@@ -193,13 +254,38 @@ table tr:hover td{background:#f8fafc}
 </style>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🍵</div>
+    <div class="login-title">FoodApps Dashboard</div>
+    <div class="login-sub">Phúc Tea — Đăng nhập để tiếp tục</div>
+    <div class="login-field">
+      <label>Tài khoản</label>
+      <input id="login-user" type="text" placeholder="Nhập tài khoản..." autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Mật khẩu</label>
+      <input id="login-pass" type="password" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
 <!-- HEADER -->
 <div class="header">
   <div>
     <div class="header-title">🍵 FoodApps Dashboard 2026</div>
     <div class="header-sub">Phúc Tea — Hệ thống phân tích doanh thu đặt hàng trực tuyến</div>
   </div>
-  <div class="header-badge">📅 Dữ liệu: 01/01/2026 – 09/03/2026 &nbsp;|&nbsp; 32 cửa hàng &nbsp;|&nbsp; 8 kênh</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="header-badge" id="data-badge">📅 Dữ liệu: 01/01/2026 – 09/03/2026 &nbsp;|&nbsp; 32 cửa hàng &nbsp;|&nbsp; 8 kênh</div>
+    <div class="header-badge" id="user-badge" style="cursor:pointer" onclick="doLogout()" title="Nhấn để đăng xuất">👤</div>
+  </div>
 </div>
 
 <div class="layout">
@@ -1499,7 +1585,7 @@ async function loadAndInit() {
       weekSel.appendChild(opt);
     });
     // Update header badge
-    const badge = document.querySelector('.header-badge');
+    const badge = document.getElementById('data-badge');
     if(badge) {
       const stores = new Set(RAW_DATA.map(r=>r.cua_hang)).size;
       const channels = new Set(RAW_DATA.map(r=>r.kenh)).size;
@@ -1528,5 +1614,6 @@ function positionFiltersBar(){
 positionFiltersBar();
 window.addEventListener('resize',positionFiltersBar);
 </script>
+</div><!-- /app -->
 </body>
 </html>
