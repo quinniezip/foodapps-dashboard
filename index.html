@@ -1571,7 +1571,16 @@ document.getElementById('f-channel').addEventListener('change',updateAll);
 // Load data.csv then init
 async function loadAndInit() {
   try {
-    const resp = await fetch('data.csv?v=' + Date.now());
+    const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRlOYNmV_eO9KvMDgop1xE0PpXTQhqFqAFd_kG48ZR7Or0LxrkFSG4Vp5p_0POWHaXHxeBPqbVLx23v/pub?output=csv&cachebust=' + Date.now();
+    const LOCAL_URL = 'data.csv?v=' + Date.now();
+    let resp;
+    try {
+      resp = await fetch(SHEETS_URL);
+      if (!resp.ok) throw new Error('sheets_error');
+    } catch(e) {
+      // Fallback sang data.csv khi chạy local (CORS block)
+      resp = await fetch(LOCAL_URL);
+    }
     const text = await resp.text();
     const lines = text.trim().split('\n');
     const rawHeaders = lines[0].split(',').map(h => h.trim().replace(/^\uFEFF/,''));
