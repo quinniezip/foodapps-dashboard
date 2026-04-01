@@ -842,7 +842,7 @@ function generateAutoInsights(){
 
   // 1. Store with biggest downtrend
   const storeRevByTuan={};
-  RAW_DATA.forEach(r=>{
+  data.forEach(r=>{
     const k=r.cua_hang;
     if(!storeRevByTuan[k])storeRevByTuan[k]={};
     const tk=`${r.thang}-${r.tuan}`;
@@ -915,19 +915,20 @@ function generateRisks(){
     else if(pct>40)risks.push({severity:'MEDIUM',text:`${ch} chiếm ${pct.toFixed(1)}% — theo dõi đa dạng kênh`});
   });
 
-  // Stores with consecutive downtrend
+  // Stores with consecutive downtrend (dùng filtered data, nhóm theo iso month)
   const storeMonthRev={};
-  RAW_DATA.forEach(r=>{
+  data.forEach(r=>{
+    const iso=toISO(r.ngay); if(!iso)return;
+    const key=iso.substring(0,7); // YYYY-MM
     if(!storeMonthRev[r.cua_hang])storeMonthRev[r.cua_hang]={};
-    storeMonthRev[r.cua_hang][r.thang]=(storeMonthRev[r.cua_hang][r.thang]||0)+r.doanh_thu;
+    storeMonthRev[r.cua_hang][key]=(storeMonthRev[r.cua_hang][key]||0)+r.doanh_thu;
   });
   Object.entries(storeMonthRev).forEach(([store,mr])=>{
-    if(mr[1]&&mr[2]&&mr[3]){
-      if(mr[2]<mr[1]&&mr[3]<mr[2]){
-        risks.push({severity:'HIGH',text:`${store} giảm 3 tháng liên tiếp: T1→T2→T3`});
-      }else if(mr[3]<mr[2]){
-        risks.push({severity:'MEDIUM',text:`${store} giảm tháng gần nhất (T2→T3)`});
-      }
+    const keys=Object.keys(mr).sort();
+    if(keys.length>=3){
+      const [a,b,c]=keys.slice(-3).map(k=>mr[k]);
+      if(b<a&&c<b) risks.push({severity:'HIGH',text:`${store} giảm 3 tháng liên tiếp: ${keys.slice(-3).join('→')}`});
+      else if(c<b) risks.push({severity:'MEDIUM',text:`${store} giảm tháng gần nhất (${keys.slice(-2).join('→')})`});
     }
   });
 
@@ -940,15 +941,17 @@ function generateRisks(){
   });
   Object.entries(storeNR).forEach(([s,v])=>{
     const nr=v.rev>0?v.tn/v.rev*100:0;
-    if(nr<50&&nr>0){
-      risks.push({severity:'HIGH',text:`${s} NR Rate=${nr.toFixed(1)}% < 50% — margin rất thấp`});
-    }
+    if(nr<50&&nr>0) risks.push({severity:'HIGH',text:`${s} NR Rate=${nr.toFixed(1)}% < 50% — margin rất thấp`});
   });
 
-  // Month-over-month revenue
-  const revByMonth=[1,2,3].map(m=>RAW_DATA.filter(r=>r.thang===m).reduce((s,r)=>s+r.doanh_thu,0));
-  if(revByMonth[1]<revByMonth[0])risks.push({severity:'MEDIUM',text:`Doanh thu T2 (${fmtVND(revByMonth[1])}) < T1 (${fmtVND(revByMonth[0])})`});
-  if(revByMonth[2]<revByMonth[1])risks.push({severity:'LOW',text:`Doanh thu T3 đang thấp hơn T2 — cần theo dõi`});
+  // Month-over-month từ filtered data
+  const revByISOM={};
+  data.forEach(r=>{const iso=toISO(r.ngay);if(!iso)return;const k=iso.substring(0,7);revByISOM[k]=(revByISOM[k]||0)+r.doanh_thu;});
+  const mKeys=Object.keys(revByISOM).sort();
+  if(mKeys.length>=2){
+    const last=revByISOM[mKeys[mKeys.length-1]],prev=revByISOM[mKeys[mKeys.length-2]];
+    if(last<prev) risks.push({severity:'MEDIUM',text:`Doanh thu ${mKeys.slice(-1)[0]} (${fmtVND(last)}) thấp hơn ${mKeys.slice(-2)[0]} (${fmtVND(prev)})`});
+  }
 
   const container=document.getElementById('risk-alerts');
   if(!risks.length){container.innerHTML='<div class="no-data">✅ Không phát hiện rủi ro đáng kể</div>';return;}
@@ -1070,25 +1073,28 @@ function updateChannelCharts(){
       scales:{y:{ticks:{callback:v=>v.toFixed(0)+'%',font:{size:9}}},x:{ticks:{font:{size:8}}}}}
   });
 
-  // Market share trend
+  // Market share trend — dùng filtered data, nhóm theo YYYY-MM
   const msData={};
-  CHANNELS.forEach(ch=>{msData[ch]={};});
-  RAW_DATA.forEach(r=>{
-    if(!msData[r.kenh])msData[r.kenh]={};
-    msData[r.kenh][r.thang]=(msData[r.kenh][r.thang]||0)+r.doanh_thu;
-  });
   const mTotals={};
-  [1,2,3].forEach(m=>{mTotals[m]=RAW_DATA.filter(r=>r.thang===m).reduce((s,r)=>s+r.doanh_thu,0);});
-  const activeChannels=Object.keys(msData).filter(ch=>Object.keys(msData[ch]).length>0);
+  data.forEach(r=>{
+    const iso=toISO(r.ngay); if(!iso)return;
+    const mk=iso.substring(0,7);
+    if(!msData[r.kenh])msData[r.kenh]={};
+    msData[r.kenh][mk]=(msData[r.kenh][mk]||0)+r.doanh_thu;
+    mTotals[mk]=(mTotals[mk]||0)+r.doanh_thu;
+  });
+  const msMonths=Object.keys(mTotals).sort();
+  const msLabels=msMonths.map(k=>{const[y,m]=k.split('-');return `T${+m}/${y.slice(2)}`});
+  const activeChannels=Object.keys(msData).filter(ch=>msMonths.some(mk=>msData[ch][mk]>0));
   destroyChart('ms-trend');
   const ctxD=document.getElementById('chart-ms-trend').getContext('2d');
   charts['ms-trend']=new Chart(ctxD,{
     type:'line',
     data:{
-      labels:['T1','T2','T3'],
+      labels:msLabels,
       datasets:activeChannels.map(ch=>({
         label:ch,
-        data:[1,2,3].map(m=>mTotals[m]>0?((msData[ch][m]||0)/mTotals[m]*100):0),
+        data:msMonths.map(mk=>mTotals[mk]>0?((msData[ch][mk]||0)/mTotals[mk]*100):0),
         borderColor:CHANNEL_COLORS[ch]||'#94a3b8',
         backgroundColor:'transparent',
         borderWidth:2,pointRadius:3
