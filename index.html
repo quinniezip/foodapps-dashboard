@@ -771,12 +771,24 @@ function updateKpiProgress(){
   const target=getKpiTarget();
   document.getElementById('kpi-target-input').value=target;
   document.getElementById('kpi-target-display').textContent='= '+fmtVND(target);
-  
+
+  const data=getFilteredData();
+
+  // Nhóm theo năm-tháng từ dữ liệu đã filter
+  const monthMap={};
+  data.forEach(r=>{
+    const iso=toISO(r.ngay);
+    if(!iso)return;
+    const[y,m]=iso.split('-');
+    const key=`${y}-${m}`;
+    if(!monthMap[key])monthMap[key]={year:+y,month:+m,label:`Tháng ${+m}/${y}`,rows:[]};
+    monthMap[key].rows.push(r);
+  });
+  const months=Object.keys(monthMap).sort().map(k=>monthMap[k]);
+
   const progGrid=document.getElementById('kpi-progress-grid');
-  const months=[{m:1,label:'Tháng 1/2026'},{m:2,label:'Tháng 2/2026'},{m:3,label:'Tháng 3/2026'}];
   let totalRev=0;
-  progGrid.innerHTML=months.map(({m,label})=>{
-    const mData=RAW_DATA.filter(r=>r.thang===m);
+  progGrid.innerHTML=months.map(({label,rows:mData})=>{
     const rev=mData.reduce((s,r)=>s+r.doanh_thu,0);
     totalRev+=rev;
     const pct=Math.min(rev/target*100,100);
@@ -786,27 +798,29 @@ function updateKpiProgress(){
       <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%;background:${color}"></div></div>
       <div class="kpi-prog-stats"><span>${fmtVND(rev)}</span><span>KPI: ${fmtVND(target)}</span></div>
     </div>`;
-  }).join('');
+  }).join('')||'<div style="color:var(--text2);padding:12px">Không có dữ liệu</div>';
 
-  // Quarterly
-  const totalTarget=target*3;
+  // Tổng kỳ
+  const totalTarget=target*Math.max(months.length,1);
   const qPct=Math.min(totalRev/totalTarget*100,100);
   const qColor=qPct>=100?'#53c28b':qPct>=80?'#f5a623':'#e94560';
+  const from=document.getElementById('f-from').value;
+  const to=document.getElementById('f-to').value;
+  const periodLabel=from&&to?`${fromISO(from)} – ${fromISO(to)}`:'Tổng kỳ';
   document.getElementById('quarterly-progress').innerHTML=`
-    <div class="kpi-prog-label"><span>Quý 1/2026</span><span>${fmtPct(qPct)}</span></div>
+    <div class="kpi-prog-label"><span>${periodLabel}</span><span>${fmtPct(qPct)}</span></div>
     <div class="progress-bar-wrap" style="height:18px"><div class="progress-bar-fill" style="width:${qPct}%;background:${qColor}"></div></div>
-    <div class="kpi-prog-stats"><span>${fmtVND(totalRev)}</span><span>KPI Quý: ${fmtVND(totalTarget)}</span></div>`;
+    <div class="kpi-prog-stats"><span>${fmtVND(totalRev)}</span><span>KPI kỳ: ${fmtVND(totalTarget)}</span></div>`;
 
   // Forecasts
   const forecastRow=document.getElementById('forecast-row');
-  forecastRow.innerHTML=months.map(({m,label})=>{
-    const mData=RAW_DATA.filter(r=>r.thang===m);
+  forecastRow.innerHTML=months.map(({label,rows:mData,year,month})=>{
     if(!mData.length)return `<div class="forecast-item"><div class="forecast-label">${label}</div><div class="forecast-val">—</div></div>`;
     const dates=[...new Set(mData.map(r=>r.ngay))];
     const daysElapsed=dates.length;
     const rev=mData.reduce((s,r)=>s+r.doanh_thu,0);
     const dailyAvg=rev/daysElapsed;
-    const daysInMonth=m===2?28:31;
+    const daysInMonth=new Date(year,month,0).getDate();
     const forecast=dailyAvg*daysInMonth;
     const pct=forecast/target*100;
     const color=pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--red)';
