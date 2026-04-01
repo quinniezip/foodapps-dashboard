@@ -312,7 +312,6 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
   <div class="nav-section">
     <div class="nav-section-title">Tổng quan</div>
     <a class="nav-link" onclick="scrollTo_('sec-intel')" title="Intelligence Panel"><span class="nav-icon">🧠</span><span class="nav-link-text">Intelligence Panel</span></a>
-    <a class="nav-link" onclick="scrollTo_('sec-kpi-prog')" title="KPI Progress"><span class="nav-icon">🎯</span><span class="nav-link-text">KPI Progress</span></a>
     <a class="nav-link" onclick="scrollTo_('sec-kpi-cards')" title="KPI Cards"><span class="nav-icon">📊</span><span class="nav-link-text">KPI Cards</span></a>
   </div>
   <div class="nav-section">
@@ -407,22 +406,6 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
 </div>
 
 <!-- 3. KPI PROGRESS -->
-<div id="sec-kpi-prog">
-  <div class="section-title">🎯 KPI Progress</div>
-  <div class="card">
-    <div class="kpi-target-row">
-      <label>🎯 KPI mục tiêu/tháng:</label>
-      <input type="number" id="kpi-target-input" value="230000000" step="1000000" onchange="saveKpiTarget();updateAll()">
-      <span class="text-sm text-muted" id="kpi-target-display"></span>
-    </div>
-    <div class="kpi-progress-grid" id="kpi-progress-grid"></div>
-    <div class="quarterly-card" style="margin-top:0">
-      <div class="panel-title">📊 Tiến độ Quý</div>
-      <div id="quarterly-progress"></div>
-    </div>
-    <div class="forecast-row" id="forecast-row"></div>
-  </div>
-</div>
 
 <!-- 4. KPI CARDS -->
 <div id="sec-kpi-cards">
@@ -756,82 +739,7 @@ function updateKpiCards(){
   }).join('');
 }
 
-// ============================================================
-// KPI PROGRESS
-// ============================================================
-function getKpiTarget(){
-  const v=localStorage.getItem('foodapps_kpi_target');
-  return v?+v:230000000;
-}
-function saveKpiTarget(){
-  const v=document.getElementById('kpi-target-input').value;
-  localStorage.setItem('foodapps_kpi_target',v);
-}
-function updateKpiProgress(){
-  const target=getKpiTarget();
-  document.getElementById('kpi-target-input').value=target;
-  document.getElementById('kpi-target-display').textContent='= '+fmtVND(target);
-
-  const data=getFilteredData();
-
-  // Nhóm theo năm-tháng từ dữ liệu đã filter
-  const monthMap={};
-  data.forEach(r=>{
-    const iso=toISO(r.ngay);
-    if(!iso)return;
-    const[y,m]=iso.split('-');
-    const key=`${y}-${m}`;
-    if(!monthMap[key])monthMap[key]={year:+y,month:+m,label:`Tháng ${+m}/${y}`,rows:[]};
-    monthMap[key].rows.push(r);
-  });
-  const months=Object.keys(monthMap).sort().map(k=>monthMap[k]);
-
-  const progGrid=document.getElementById('kpi-progress-grid');
-  let totalRev=0;
-  progGrid.innerHTML=months.map(({label,rows:mData})=>{
-    const rev=mData.reduce((s,r)=>s+r.doanh_thu,0);
-    totalRev+=rev;
-    const pct=Math.min(rev/target*100,100);
-    const color=pct>=100?'#53c28b':pct>=80?'#f5a623':'#e94560';
-    return `<div class="kpi-prog-card">
-      <div class="kpi-prog-label"><span>${label}</span><span>${fmtPct(pct)}</span></div>
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-      <div class="kpi-prog-stats"><span>${fmtVND(rev)}</span><span>KPI: ${fmtVND(target)}</span></div>
-    </div>`;
-  }).join('')||'<div style="color:var(--text2);padding:12px">Không có dữ liệu</div>';
-
-  // Tổng kỳ
-  const totalTarget=target*Math.max(months.length,1);
-  const qPct=Math.min(totalRev/totalTarget*100,100);
-  const qColor=qPct>=100?'#53c28b':qPct>=80?'#f5a623':'#e94560';
-  const from=document.getElementById('f-from').value;
-  const to=document.getElementById('f-to').value;
-  const periodLabel=from&&to?`${fromISO(from)} – ${fromISO(to)}`:'Tổng kỳ';
-  document.getElementById('quarterly-progress').innerHTML=`
-    <div class="kpi-prog-label"><span>${periodLabel}</span><span>${fmtPct(qPct)}</span></div>
-    <div class="progress-bar-wrap" style="height:18px"><div class="progress-bar-fill" style="width:${qPct}%;background:${qColor}"></div></div>
-    <div class="kpi-prog-stats"><span>${fmtVND(totalRev)}</span><span>KPI kỳ: ${fmtVND(totalTarget)}</span></div>`;
-
-  // Forecasts
-  const forecastRow=document.getElementById('forecast-row');
-  forecastRow.innerHTML=months.map(({label,rows:mData,year,month})=>{
-    if(!mData.length)return `<div class="forecast-item"><div class="forecast-label">${label}</div><div class="forecast-val">—</div></div>`;
-    const dates=[...new Set(mData.map(r=>r.ngay))];
-    const daysElapsed=dates.length;
-    const rev=mData.reduce((s,r)=>s+r.doanh_thu,0);
-    const dailyAvg=rev/daysElapsed;
-    const daysInMonth=new Date(year,month,0).getDate();
-    const forecast=dailyAvg*daysInMonth;
-    const pct=forecast/target*100;
-    const color=pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--red)';
-    return `<div class="forecast-item">
-      <div class="forecast-label">${label}</div>
-      <div class="forecast-val" style="color:${color}">${fmtVND(forecast)}</div>
-      <div class="forecast-label" style="font-weight:700">${fmtPct(pct)} KPI</div>
-      <div class="forecast-label">(${daysElapsed} ngày / ${daysInMonth} ngày)</div>
-    </div>`;
-  }).join('');
-}
+function updateKpiProgress(){}
 
 // ============================================================
 // AUTO INSIGHTS
