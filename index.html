@@ -651,7 +651,7 @@ function fmt(n){return typeof n==='number'?n.toLocaleString('vi-VN'):n}
 function fmtVND(n){return fmt(Math.round(n))+' ₫'}
 function fmtPct(n){return (n||0).toFixed(1)+'%'}
 function parseDate(s){const[d,m,y]=s.split('/');return new Date(+y,+m-1,+d)}
-function toISO(s){const[d,m,y]=s.split('/');return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`}
+function toISO(s){if(!s||typeof s!=='string')return null;const p=s.trim().split('/');if(p.length<3||!p[1])return null;const[d,m,y]=p;return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`}
 function fromISO(s){const[y,m,d]=s.split('-');return `${d}/${m}/${y}`}
 function getDOW(dateStr){
   const[d,m,y]=dateStr.split('/');
@@ -1610,10 +1610,10 @@ async function loadAndInit() {
         obj[h] = numFields.has(h) ? (parseFloat(v.replace(/\./g,'').replace(',','.')) || 0) : v;
       });
       return obj;
-    }).filter(r => r.ngay);
+    }).filter(r => r.ngay && r.ngay.includes('/'));
     console.log('Loaded', RAW_DATA.length, 'rows from data.csv');
     // Set date filter range dynamically from data
-    const allISO = RAW_DATA.map(r => toISO(r.ngay)).sort();
+    const allISO = RAW_DATA.map(r => toISO(r.ngay)).filter(Boolean).sort();
     const minDate = allISO[0], maxDate = allISO[allISO.length-1];
     document.getElementById('f-from').value = minDate;
     document.getElementById('f-to').value = maxDate;
