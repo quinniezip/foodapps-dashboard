@@ -421,22 +421,30 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
 <!-- 5. CHANNEL INTELLIGENCE -->
 <div id="sec-channel">
   <div class="section-title">📡 Channel Intelligence</div>
-  <div class="channel-grid">
+  <!-- Row 1: A + B -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
     <div class="panel-card">
-      <div class="panel-title">A — Channel Share</div>
+      <div class="panel-title">A — Tỷ trọng doanh thu theo kênh</div>
       <div id="channel-warning"></div>
-      <div class="chart-wrap" style="max-height:220px"><canvas id="chart-channel-share"></canvas></div>
+      <div class="chart-wrap" style="min-height:200px"><canvas id="chart-channel-share"></canvas></div>
     </div>
     <div class="panel-card">
       <div class="panel-title">B — Net Revenue Rate by Channel</div>
-      <div class="chart-wrap" style="max-height:220px"><canvas id="chart-nr-rate"></canvas></div>
+      <div class="chart-wrap" style="min-height:200px"><canvas id="chart-nr-rate"></canvas></div>
       <div class="analysis-text" id="nr-analysis"></div>
     </div>
+  </div>
+  <!-- Row 2: C + D -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <div class="panel-card">
-      <div class="panel-title">C — Gross Margin & Market Share Trend</div>
-      <div class="chart-wrap" style="max-height:130px"><canvas id="chart-gm-channel"></canvas></div>
-      <div class="panel-title" style="margin-top:10px;font-size:0.68rem">Xu hướng thị phần theo tháng</div>
-      <div class="chart-wrap" style="max-height:100px"><canvas id="chart-ms-trend"></canvas></div>
+      <div class="panel-title">C — Gross Margin % theo kênh</div>
+      <div class="chart-wrap" style="min-height:200px"><canvas id="chart-gm-channel"></canvas></div>
+      <div class="analysis-text" id="gm-analysis"></div>
+    </div>
+    <div class="panel-card">
+      <div class="panel-title">D — Xu hướng thị phần theo tháng</div>
+      <div class="chart-wrap" style="min-height:200px"><canvas id="chart-ms-trend"></canvas></div>
+      <div id="ms-placeholder" class="no-data" style="display:none">Cần ≥ 2 tháng dữ liệu để hiển thị xu hướng</div>
     </div>
   </div>
 </div>
@@ -974,13 +982,33 @@ function updateChannelCharts(){
   const topPct=totalRev>0?chRev[top]/totalRev*100:0;
   warn.innerHTML=topPct>50?`<div class="warning-banner">⚠️ ${top} chiếm ${topPct.toFixed(1)}% — phụ thuộc cao!</div>`:'';
 
+  // Panel A: horizontal stacked bar (tỷ trọng %)
   destroyChart('channel-share');
   const ctxA=document.getElementById('chart-channel-share').getContext('2d');
   charts['channel-share']=new Chart(ctxA,{
-    type:'doughnut',
-    data:{labels:chLabels,datasets:[{data:chVals,backgroundColor:chColors,borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:12}},
-      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmtVND(ctx.raw)} (${totalRev>0?(ctx.raw/totalRev*100).toFixed(1):0}%)`}}}}
+    type:'bar',
+    data:{
+      labels:[''],
+      datasets:chLabels.map((k,i)=>({
+        label:k,
+        data:[totalRev>0?chRev[k]/totalRev*100:0],
+        backgroundColor:CHANNEL_COLORS[k]||'#94a3b8',
+        borderWidth:0,
+        borderRadius:i===0?{topLeft:4,bottomLeft:4}:i===chLabels.length-1?{topRight:4,bottomRight:4}:0,
+        borderSkipped:false
+      }))
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}% (${fmtVND(chRev[ctx.dataset.label]||0)})`}}
+      },
+      scales:{
+        x:{stacked:true,ticks:{callback:v=>v+'%',font:{size:9}},max:100,grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{stacked:true,display:false}
+      }
+    }
   });
 
   // Panel B: NR Rate by channel
@@ -1021,10 +1049,15 @@ function updateChannelCharts(){
   charts['gm-channel']=new Chart(ctxC,{
     type:'bar',
     data:{labels:gmLabels,datasets:[{label:'GM%',data:gmVals,backgroundColor:gmVals.map((v,i,a)=>v===Math.max(...a)?'var(--sem-good)':v===Math.min(...a)?'var(--sem-risk)':'rgba(79,142,247,0.6)'),borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtPct(ctx.raw)}}},
-      scales:{y:{ticks:{callback:v=>v.toFixed(0)+'%',font:{size:9}}},x:{ticks:{font:{size:8}}}}}
+      scales:{x:{ticks:{callback:v=>v.toFixed(0)+'%',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{font:{size:9}}}}}
   });
+  const gmBest=gmLabels[gmVals.indexOf(Math.max(...gmVals))];
+  const gmWorst=gmLabels[gmVals.indexOf(Math.min(...gmVals))];
+  document.getElementById('gm-analysis').innerHTML=
+    `<b>GM% cao nhất:</b> <span style="color:var(--sem-good)">${gmBest}</span> (${fmtPct(Math.max(...gmVals))}) — biên lợi nhuận tốt nhất<br>`+
+    `<b>GM% thấp nhất:</b> <span style="color:var(--sem-risk)">${gmWorst}</span> (${fmtPct(Math.min(...gmVals))}) — cần xem lại chi phí`;
 
   // Market share trend — dùng filtered data, nhóm theo YYYY-MM
   const msData={};
@@ -1039,24 +1072,33 @@ function updateChannelCharts(){
   const msMonths=Object.keys(mTotals).sort();
   const msLabels=msMonths.map(k=>{const[y,m]=k.split('-');return `T${+m}/${y.slice(2)}`});
   const activeChannels=Object.keys(msData).filter(ch=>msMonths.some(mk=>msData[ch][mk]>0));
+  const msCanvas=document.getElementById('chart-ms-trend');
+  const msPlaceholder=document.getElementById('ms-placeholder');
   destroyChart('ms-trend');
-  const ctxD=document.getElementById('chart-ms-trend').getContext('2d');
-  charts['ms-trend']=new Chart(ctxD,{
-    type:'line',
-    data:{
-      labels:msLabels,
-      datasets:activeChannels.map(ch=>({
-        label:ch,
-        data:msMonths.map(mk=>mTotals[mk]>0?((msData[ch][mk]||0)/mTotals[mk]*100):0),
-        borderColor:CHANNEL_COLORS[ch]||'#94a3b8',
-        backgroundColor:'transparent',
-        borderWidth:2,pointRadius:3
-      }))
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{font:{size:8},boxWidth:8}}},
-      scales:{y:{ticks:{callback:v=>v.toFixed(0)+'%',font:{size:8}}},x:{ticks:{font:{size:9}}}}}
-  });
+  if(msMonths.length<2){
+    msCanvas.style.display='none';
+    if(msPlaceholder) msPlaceholder.style.display='flex';
+  } else {
+    msCanvas.style.display='';
+    if(msPlaceholder) msPlaceholder.style.display='none';
+    const ctxD=msCanvas.getContext('2d');
+    charts['ms-trend']=new Chart(ctxD,{
+      type:'line',
+      data:{
+        labels:msLabels,
+        datasets:activeChannels.map(ch=>({
+          label:ch,
+          data:msMonths.map(mk=>mTotals[mk]>0?((msData[ch][mk]||0)/mTotals[mk]*100):0),
+          borderColor:CHANNEL_COLORS[ch]||'#94a3b8',
+          backgroundColor:'transparent',
+          borderWidth:2,pointRadius:3
+        }))
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{font:{size:8},boxWidth:8}}},
+        scales:{y:{ticks:{callback:v=>v.toFixed(0)+'%',font:{size:8}}},x:{ticks:{font:{size:9}}}}}
+    });
+  }
 }
 
 // ============================================================
