@@ -1128,12 +1128,14 @@ function updateDailyRevChart(){
 
   // Nhóm theo ngày ISO
   const byDate={};
-  data.forEach(r=>{const iso=toISO(r.ngay);if(!iso)return;byDate[iso]=(byDate[iso]||0)+r.doanh_thu;});
+  const byDateTN={};
+  data.forEach(r=>{const iso=toISO(r.ngay);if(!iso)return;byDate[iso]=(byDate[iso]||0)+r.doanh_thu;byDateTN[iso]=(byDateTN[iso]||0)+r.thuc_nhan;});
   const dates=Object.keys(byDate).sort();
 
   // Cùng kỳ năm ngoái
   const priorByDate={};
-  prior.forEach(r=>{const iso=toISO(r.ngay);if(!iso)return;const s=shiftYear(iso,1);priorByDate[s]=(priorByDate[s]||0)+r.doanh_thu;});
+  const priorByDateTN={};
+  prior.forEach(r=>{const iso=toISO(r.ngay);if(!iso)return;const s=shiftYear(iso,1);priorByDate[s]=(priorByDate[s]||0)+r.doanh_thu;priorByDateTN[s]=(priorByDateTN[s]||0)+r.thuc_nhan;});
 
   // Top 3 ngày cao nhất
   const top3=new Set([...dates].sort((a,b)=>byDate[b]-byDate[a]).slice(0,3));
@@ -1213,35 +1215,57 @@ function updateDailyRevChart(){
   // Insight box
   const insightEl=document.getElementById('daily-rev-insight');
   if(insightEl&&dates.length>0){
+    // Doanh thu
     const total=vals.reduce((a,b)=>a+(b||0),0);
     const avg=total/vals.length;
     const maxDate=dates.reduce((a,b)=>byDate[b]>byDate[a]?b:a);
     const minDate=dates.reduce((a,b)=>byDate[b]<byDate[a]?b:a);
     const top3arr=[...dates].sort((a,b)=>byDate[b]-byDate[a]).slice(0,3);
 
-    // So sánh với cùng kỳ
+    // Thực nhận
+    const totalTN=dates.reduce((s,d)=>s+(byDateTN[d]||0),0);
+    const avgTN=totalTN/dates.length;
+    const nrRate=total>0?(totalTN/total*100):0;
+    const maxTNDate=dates.reduce((a,b)=>(byDateTN[b]||0)>(byDateTN[a]||0)?b:a);
+    const minTNDate=dates.reduce((a,b)=>(byDateTN[b]||0)<(byDateTN[a]||0)?b:a);
+    const top3TN=[...dates].sort((a,b)=>(byDateTN[b]||0)-(byDateTN[a]||0)).slice(0,3);
+
+    // So sánh cùng kỳ — doanh thu
     const priorTotal=priorVals.reduce((a,b)=>a+(b||0),0);
-    let yoyLine='';
+    const priorTotalTN=dates.reduce((s,d)=>s+(priorByDateTN[d]||0),0);
+    let yoyRevLine='', yoyTNLine='';
     if(priorTotal>0){
       const diff=total-priorTotal;
       const pct=(diff/priorTotal*100).toFixed(1);
-      const arrow=diff>=0?'▲':'▼';
       const cls=diff>=0?'color:#34d399':'color:#f87171';
-      yoyLine=`<br>• So với cùng kỳ năm ${y1}: <span style="${cls}">${arrow} ${Math.abs(pct)}%</span> (${diff>=0?'+':''}${fmtVND(diff)})`;
+      yoyRevLine=`<br>• DT so cùng kỳ năm ${y1}: <span style="${cls}">${diff>=0?'▲':'▼'} ${Math.abs(pct)}%</span> (${diff>=0?'+':''}${fmtVND(diff)})`;
+    }
+    if(priorTotalTN>0){
+      const diff=totalTN-priorTotalTN;
+      const pct=(diff/priorTotalTN*100).toFixed(1);
+      const cls=diff>=0?'color:#34d399':'color:#f87171';
+      yoyTNLine=`<br>• TN so cùng kỳ năm ${y1}: <span style="${cls}">${diff>=0?'▲':'▼'} ${Math.abs(pct)}%</span> (${diff>=0?'+':''}${fmtVND(diff)})`;
     }
 
-    // Các ngày dưới trung bình
     const belowAvg=dates.filter(d=>byDate[d]<avg*0.7).length;
 
     insightEl.innerHTML=
       `<strong style="color:#e2e8f0">Nhận xét kỳ ${from?fromISO(from)+' – '+fromISO(to):'được chọn'}:</strong><br>`+
-      `• Tổng doanh thu: <strong style="color:#a78bfa">${fmtVND(total)}</strong> trên ${dates.length} ngày`+
-      `<br>• Trung bình/ngày: <strong>${fmtVND(Math.round(avg))}</strong>`+
-      `<br>• Ngày đỉnh cao nhất: <strong style="color:#f59e0b">${fromISO(maxDate)}</strong> — ${fmtVND(byDate[maxDate])}`+
-      `<br>• Top 3 ngày cao nhất: ${top3arr.map(d=>`<strong style="color:#f59e0b">${fromISO(d)}</strong> (${fmtVND(byDate[d])})`).join(', ')}`+
-      `<br>• Ngày thấp nhất: <strong style="color:#f87171">${fromISO(minDate)}</strong> — ${fmtVND(byDate[minDate])}`+
-      (belowAvg>0?`<br>• Có <strong>${belowAvg} ngày</strong> doanh thu dưới 70% mức trung bình`:'<br>• Không có ngày nào dưới 70% mức trung bình — hoạt động ổn định')+
-      yoyLine;
+      // --- Doanh thu ---
+      `<span style="color:#a78bfa;font-weight:700">● Doanh thu:</span><br>`+
+      `• Tổng: <strong style="color:#a78bfa">${fmtVND(total)}</strong> / ${dates.length} ngày — TB/ngày: <strong>${fmtVND(Math.round(avg))}</strong><br>`+
+      `• Đỉnh cao nhất: <strong style="color:#f59e0b">${fromISO(maxDate)}</strong> — ${fmtVND(byDate[maxDate])}<br>`+
+      `• Top 3: ${top3arr.map(d=>`<strong style="color:#f59e0b">${fromISO(d)}</strong> (${fmtVND(byDate[d])})`).join(', ')}<br>`+
+      `• Ngày thấp nhất: <strong style="color:#f87171">${fromISO(minDate)}</strong> — ${fmtVND(byDate[minDate])}<br>`+
+      (belowAvg>0?`• Có <strong>${belowAvg} ngày</strong> dưới 70% mức trung bình<br>`:'• Không có ngày nào dưới 70% mức trung bình — hoạt động ổn định<br>')+
+      yoyRevLine+
+      // --- Thực nhận ---
+      `<br><span style="color:#34d399;font-weight:700">● Thực nhận:</span><br>`+
+      `• Tổng: <strong style="color:#34d399">${fmtVND(totalTN)}</strong> — TB/ngày: <strong>${fmtVND(Math.round(avgTN))}</strong> — Tỷ lệ TN/DT: <strong>${nrRate.toFixed(1)}%</strong><br>`+
+      `• Ngày TN cao nhất: <strong style="color:#f59e0b">${fromISO(maxTNDate)}</strong> — ${fmtVND(byDateTN[maxTNDate]||0)}<br>`+
+      `• Top 3 TN: ${top3TN.map(d=>`<strong style="color:#f59e0b">${fromISO(d)}</strong> (${fmtVND(byDateTN[d]||0)})`).join(', ')}<br>`+
+      `• Ngày TN thấp nhất: <strong style="color:#f87171">${fromISO(minTNDate)}</strong> — ${fmtVND(byDateTN[minTNDate]||0)}`+
+      yoyTNLine;
   }
 }
 
