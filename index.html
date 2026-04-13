@@ -461,7 +461,7 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
   <div class="card" style="padding:20px">
     <div class="panel-title" id="daily-rev-title">Doanh thu từng ngày trong kỳ</div>
     <div class="chart-wrap" style="min-height:260px"><canvas id="chart-daily-rev"></canvas></div>
-    <div id="daily-rev-insight" style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,0.04);border-radius:10px;border-left:3px solid rgba(99,102,241,0.5);font-size:13px;line-height:1.75;color:#94a3b8"></div>
+    <div id="daily-rev-insight" style="margin-top:16px;padding:16px 20px;background:var(--card2);border-radius:10px;border-left:3px solid var(--accent);line-height:1.6;color:var(--text2)"></div>
   </div>
 </div>
 
@@ -1126,10 +1126,10 @@ function updateTrendChart(){
   const peakDay=sortedDates[vals.indexOf(maxV)];
   const minDay=sortedDates[vals.indexOf(minV)];
   document.getElementById('trend-analysis').innerHTML=`
-    <div class="trend-stat"><div class="trend-stat-label">Đỉnh cao nhất</div><div class="trend-stat-value text-green">${fmtVND(maxV)}</div><div class="text-xs text-muted">${peakDay}</div></div>
-    <div class="trend-stat"><div class="trend-stat-label">Thấp nhất</div><div class="trend-stat-value text-red">${fmtVND(minV)}</div><div class="text-xs text-muted">${minDay}</div></div>
-    <div class="trend-stat"><div class="trend-stat-label">Trung bình/ngày</div><div class="trend-stat-value text-navy">${fmtVND(avg)}</div></div>
-    <div class="trend-stat"><div class="trend-stat-label">Số ngày có dữ liệu</div><div class="trend-stat-value text-navy">${vals.length} ngày</div></div>`;
+    <div class="trend-stat"><div class="trend-stat-label">Đỉnh cao nhất</div><div class="trend-stat-value" style="color:var(--accent)">${fmtVND(maxV)}</div><div class="text-xs text-muted">${peakDay}</div></div>
+    <div class="trend-stat"><div class="trend-stat-label">Thấp nhất</div><div class="trend-stat-value" style="color:var(--text2)">${fmtVND(minV)}</div><div class="text-xs text-muted">${minDay}</div></div>
+    <div class="trend-stat"><div class="trend-stat-label">Trung bình/ngày</div><div class="trend-stat-value" style="color:#f1f5f9">${fmtVND(avg)}</div></div>
+    <div class="trend-stat"><div class="trend-stat-label">Số ngày có dữ liệu</div><div class="trend-stat-value" style="color:#f1f5f9">${vals.length} ngày</div></div>`;
 }
 
 // ============================================================
@@ -1264,23 +1264,49 @@ function updateDailyRevChart(){
 
     const belowAvg=dates.filter(d=>byDate[d]<avg*0.7).length;
 
-    insightEl.innerHTML=
-      `<strong style="color:#e2e8f0">Nhận xét kỳ ${from?fromISO(from)+' – '+fromISO(to):'được chọn'}:</strong><br>`+
-      // --- Doanh thu ---
-      `<span style="color:#a78bfa;font-weight:700">● Doanh thu:</span><br>`+
-      `• Tổng: <strong style="color:#a78bfa">${fmtVND(total)}</strong> / ${dates.length} ngày — TB/ngày: <strong>${fmtVND(Math.round(avg))}</strong><br>`+
-      `• Đỉnh cao nhất: <strong style="color:#f59e0b">${fromISO(maxDate)}</strong> — ${fmtVND(byDate[maxDate])}<br>`+
-      `• Top 3: ${top3arr.map(d=>`<strong style="color:#f59e0b">${fromISO(d)}</strong> (${fmtVND(byDate[d])})`).join(', ')}<br>`+
-      `• Ngày thấp nhất: <strong style="color:#f87171">${fromISO(minDate)}</strong> — ${fmtVND(byDate[minDate])}<br>`+
-      (belowAvg>0?`• Có <strong>${belowAvg} ngày</strong> dưới 70% mức trung bình<br>`:'• Không có ngày nào dưới 70% mức trung bình — hoạt động ổn định<br>')+
-      yoyRevLine+
-      // --- Thực nhận ---
-      `<br><span style="color:#34d399;font-weight:700">● Thực nhận:</span><br>`+
-      `• Tổng: <strong style="color:#34d399">${fmtVND(totalTN)}</strong> — TB/ngày: <strong>${fmtVND(Math.round(avgTN))}</strong> — Tỷ lệ TN/DT: <strong>${nrRate.toFixed(1)}%</strong><br>`+
-      `• Ngày TN cao nhất: <strong style="color:#f59e0b">${fromISO(maxTNDate)}</strong> — ${fmtVND(byDateTN[maxTNDate]||0)}<br>`+
-      `• Top 3 TN: ${top3TN.map(d=>`<strong style="color:#f59e0b">${fromISO(d)}</strong> (${fmtVND(byDateTN[d]||0)})`).join(', ')}<br>`+
-      `• Ngày TN thấp nhất: <strong style="color:#f87171">${fromISO(minTNDate)}</strong> — ${fmtVND(byDateTN[minTNDate]||0)}`+
-      yoyTNLine;
+    function row(label,val,sub=''){
+      return `<tr>
+        <td style="padding:5px 10px 5px 0;color:var(--text2);font-size:0.72rem;white-space:nowrap">${label}</td>
+        <td style="padding:5px 0;color:#f1f5f9;font-size:0.78rem;font-weight:600">${val}</td>
+        ${sub?`<td style="padding:5px 0 5px 10px;font-size:0.72rem;color:var(--text2)">${sub}</td>`:'<td></td>'}
+      </tr>`;
+    }
+    function yoyBadge(cur,prev){
+      if(!prev||prev===0)return '';
+      const d=(cur-prev)/Math.abs(prev)*100;
+      const col=d>=0?'var(--sem-good)':'var(--sem-risk)';
+      return `<span style="color:${col};font-weight:700">${d>=0?'▲':'▼'} ${Math.abs(d).toFixed(1)}%</span>`;
+    }
+    insightEl.innerHTML=`
+      <div style="color:#f1f5f9;font-weight:700;font-size:0.8rem;margin-bottom:10px">
+        Nhận xét kỳ ${from?fromISO(from)+' – '+fromISO(to):'được chọn'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-weight:700;margin-bottom:6px">Doanh thu</div>
+          <table style="width:100%;border-collapse:collapse">
+            ${row('Tổng',fmtVND(total),dates.length+' ngày')}
+            ${row('Trung bình/ngày',fmtVND(Math.round(avg)))}
+            ${row('Cao nhất','<span style="color:var(--accent)">'+fromISO(maxDate)+'</span>',fmtVND(byDate[maxDate]))}
+            ${row('Top 3',top3arr.map(d=>'<span style="color:var(--accent)">'+fromISO(d)+'</span>').join(' · '))}
+            ${row('Thấp nhất','<span style="color:var(--text2)">'+fromISO(minDate)+'</span>',fmtVND(byDate[minDate]))}
+            ${belowAvg>0?row('Ngày yếu (<70%)','<span style="color:var(--sem-risk)">'+belowAvg+' ngày</span>'):''}
+            ${priorTotal>0?row('So cùng kỳ '+y1,yoyBadge(total,priorTotal),fmtVND(total-priorTotal)):''}
+          </table>
+        </div>
+        <div>
+          <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--primary);font-weight:700;margin-bottom:6px">Thực nhận</div>
+          <table style="width:100%;border-collapse:collapse">
+            ${row('Tổng',fmtVND(totalTN))}
+            ${row('Trung bình/ngày',fmtVND(Math.round(avgTN)))}
+            ${row('Tỷ lệ TN/DT','<span style="color:var(--accent)">'+nrRate.toFixed(1)+'%</span>')}
+            ${row('Cao nhất','<span style="color:var(--accent)">'+fromISO(maxTNDate)+'</span>',fmtVND(byDateTN[maxTNDate]||0))}
+            ${row('Top 3',top3TN.map(d=>'<span style="color:var(--accent)">'+fromISO(d)+'</span>').join(' · '))}
+            ${row('Thấp nhất','<span style="color:var(--text2)">'+fromISO(minTNDate)+'</span>',fmtVND(byDateTN[minTNDate]||0))}
+            ${priorTotalTN>0?row('So cùng kỳ '+y1,yoyBadge(totalTN,priorTotalTN),fmtVND(totalTN-priorTotalTN)):''}
+          </table>
+        </div>
+      </div>`;
   }
 }
 
