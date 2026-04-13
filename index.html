@@ -1734,6 +1734,7 @@ async function loadAndInit() {
   initStoresDropdown();
   renderActionItems();
   updateAll();
+  positionFiltersBar();
 }
 loadAndInit();
 
@@ -1756,6 +1757,8 @@ function positionFiltersBar(){
 }
 positionFiltersBar();
 window.addEventListener('resize',positionFiltersBar);
+// Re-run after fonts (Lexend) finish loading — prevents wrong height measurement
+window.addEventListener('load',()=>{positionFiltersBar();setTimeout(positionFiltersBar,300);});
 
 // ============================================================
 // SIDEBAR TOGGLE
