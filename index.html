@@ -9,6 +9,7 @@
 <script>if(sessionStorage.getItem('auth_user')){document.getElementById('auth-guard').remove()}</script>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
 // ============================================================
 // AUTH — kiểm tra session trước khi load dashboard
@@ -1124,66 +1125,86 @@ function updateDailyRevChart(){
   const from=document.getElementById('f-from').value;
   const to=document.getElementById('f-to').value;
 
-  // Nhóm doanh thu theo ngày (ISO)
+  // Nhóm theo ngày ISO
   const byDate={};
-  data.forEach(r=>{
-    const iso=toISO(r.ngay); if(!iso)return;
-    byDate[iso]=(byDate[iso]||0)+r.doanh_thu;
-  });
+  data.forEach(r=>{const iso=toISO(r.ngay);if(!iso)return;byDate[iso]=(byDate[iso]||0)+r.doanh_thu;});
   const dates=Object.keys(byDate).sort();
 
-  // Cùng kỳ năm ngoái — ánh xạ ngày sang năm hiện tại để overlay
+  // Cùng kỳ năm ngoái
   const priorByDate={};
-  prior.forEach(r=>{
-    const iso=toISO(r.ngay); if(!iso)return;
-    const shifted=shiftYear(iso,1); // đưa về cùng năm hiện tại
-    priorByDate[shifted]=(priorByDate[shifted]||0)+r.doanh_thu;
-  });
+  prior.forEach(r=>{const iso=toISO(r.ngay);if(!iso)return;const s=shiftYear(iso,1);priorByDate[s]=(priorByDate[s]||0)+r.doanh_thu;});
 
-  const labels=dates.map(d=>{const[y,m,day]=d.split('-');return `${day}/${m}`;});
+  // Top 3 ngày cao nhất
+  const top3=new Set([...dates].sort((a,b)=>byDate[b]-byDate[a]).slice(0,3));
+
+  // Labels đầy đủ DD/MM/YYYY
+  const labels=dates.map(d=>{const[y,m,day]=d.split('-');return `${day}/${m}/${y}`;});
   const vals=dates.map(d=>byDate[d]);
   const priorVals=dates.map(d=>priorByDate[d]||null);
-
   const y1=from?shiftYear(from,-1).substring(0,4):'N-1';
+
+  // Màu: top 3 = vàng nổi, còn lại = tím nhạt
+  const bgColors=dates.map(d=>top3.has(d)?'#f59e0b':'rgba(99,102,241,0.65)');
+  const borderColors=dates.map(d=>top3.has(d)?'#d97706':'rgba(99,102,241,0.9)');
+
   const titleEl=document.getElementById('daily-rev-title');
   if(titleEl&&from&&to) titleEl.textContent=`Doanh thu từng ngày: ${fromISO(from)} – ${fromISO(to)}`;
+
+  // Chiều cao động theo số ngày
+  const wrap=document.getElementById('chart-daily-rev').parentElement;
+  const chartH=Math.max(300, dates.length*26);
+  wrap.style.minHeight=chartH+'px';
 
   destroyChart('daily-rev');
   const ctx=document.getElementById('chart-daily-rev').getContext('2d');
   charts['daily-rev']=new Chart(ctx,{
     type:'bar',
+    plugins:[ChartDataLabels],
     data:{
       labels,
       datasets:[
         {
-          label:'Kỳ hiện tại',
+          label:'Doanh thu',
           data:vals,
-          backgroundColor:'rgba(99,102,241,0.75)',
+          backgroundColor:bgColors,
+          borderColor:borderColors,
+          borderWidth:1,
           borderRadius:3,
-          order:2
+          order:1,
+          datalabels:{
+            display:true,
+            anchor:'end',
+            align:'end',
+            formatter:v=>v>=1e9?(v/1e9).toFixed(2)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':fmt(v),
+            color:ctx=>top3.has(dates[ctx.dataIndex])?'#f59e0b':'#94a3b8',
+            font:{size:9,weight:'600'},
+            padding:{left:4}
+          }
         },
         {
           label:`Cùng kỳ ${y1}`,
           data:priorVals,
-          type:'line',
-          borderColor:'#f59e0b',
-          backgroundColor:'transparent',
-          borderWidth:1.5,
-          pointRadius:0,
-          tension:0.3,
-          order:1
+          backgroundColor:'rgba(100,116,139,0.3)',
+          borderColor:'rgba(100,116,139,0.5)',
+          borderWidth:1,
+          borderRadius:3,
+          order:2,
+          datalabels:{display:false}
         }
       ]
     },
     options:{
+      indexAxis:'y',
       responsive:true,maintainAspectRatio:false,
+      layout:{padding:{right:80}},
       plugins:{
-        legend:{labels:{font:{size:10},boxWidth:12}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtVND(ctx.raw||0)}`}}
+        legend:{labels:{font:{size:10},boxWidth:10}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtVND(c.raw||0)}`}},
+        datalabels:{}
       },
       scales:{
-        x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true,maxTicksLimit:31}},
-        y:{ticks:{callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v,font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}}
+        x:{ticks:{callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v,font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{ticks:{font:{size:9}},grid:{display:false}}
       }
     }
   });
