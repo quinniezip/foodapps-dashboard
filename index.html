@@ -1365,7 +1365,7 @@ function updateDOWChart(){
   const dowAvg=dowRev.map((v,i)=>dowCount[i]>0?v/dowCount[i]:0);
   const maxDOW=Math.max(...dowAvg);
   const minDOW=Math.min(...dowAvg.filter(v=>v>0));
-  const bgColors=dowAvg.map(v=>v===maxDOW?'var(--accent)':v===minDOW?'rgba(239,68,68,0.55)':'rgba(79,142,247,0.55)');
+  const bgColors=dowAvg.map(v=>v===maxDOW?'#22c55e':v===minDOW?'#ef4444':'rgba(79,142,247,0.6)');
 
   destroyChart('dow');
   const ctx=document.getElementById('chart-dow').getContext('2d');
