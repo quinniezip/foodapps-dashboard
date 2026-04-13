@@ -78,6 +78,9 @@ window.addEventListener('DOMContentLoaded', () => {
   --purple:#a855f7;--cyan:#06b6d4;--bg:#0a0a0f;--white:#16161e;--text:#e2e8f0;
   --text2:#64748b;--border:rgba(255,255,255,0.07);--shadow:0 4px 24px rgba(0,0,0,0.4);
   --card:#16161e;--card2:#1e1e2a;--sidebar:#0f0f17;
+  /* Design system palette */
+  --primary:#4F8EF7;--accent:#F5A623;
+  --sem-good:#22c55e;--sem-risk:#ef4444;--sem-warn:#f59e0b;
 }
 body{font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;font-size:14px}
 /* HEADER */
@@ -175,12 +178,12 @@ body{font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif
 .kpi-cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .kpi-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:18px;position:relative;overflow:hidden;transition:border-color 0.2s}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.kpi-card-0::before{background:linear-gradient(90deg,var(--navy2),var(--cyan))}
-.kpi-card-1::before{background:linear-gradient(90deg,var(--green),#34d399)}
-.kpi-card-2::before{background:linear-gradient(90deg,var(--purple),#c084fc)}
-.kpi-card-3::before{background:linear-gradient(90deg,var(--orange),#fb923c)}
-.kpi-card-4::before{background:linear-gradient(90deg,var(--cyan),#38bdf8)}
-.kpi-card-5::before{background:linear-gradient(90deg,var(--red),#f87171)}
+/* Border màu encode ý nghĩa YoY — set dynamically by JS */
+.kpi-card-up::before{background:linear-gradient(90deg,var(--sem-good),#4ade80)}
+.kpi-card-down::before{background:linear-gradient(90deg,var(--sem-risk),#f87171)}
+.kpi-card-flat::before{background:linear-gradient(90deg,#475569,#64748b)}
+/* Red tint khi metric âm */
+.kpi-card-danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2)}
 .kpi-card-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);font-weight:700;margin-bottom:8px}
 .kpi-card-value{font-size:1.8rem;font-weight:800;color:#f1f5f9;line-height:1}
 .kpi-card-sub{font-size:0.72rem;color:var(--text2);margin-top:6px}
@@ -735,12 +738,12 @@ function updateKpiCards(){
   const y1label=from?shiftYear(from,-1).substring(0,4):'N-1';
   const y2label=from?shiftYear(from,-2).substring(0,4):'N-2';
   const metrics=[
-    {label:'Doanh Thu Gộp',val:m.rev,p1:p.rev,p2:p2.rev,fmt:(v)=>fmtVND(v),insight:'Tổng doanh thu trong kỳ',cls:'kpi-card-0'},
-    {label:'Thực Nhận',val:m.tn,p1:p.tn,p2:p2.tn,fmt:(v)=>fmtVND(v),insight:'Sau chiết khấu & hoàn tiền',cls:'kpi-card-1'},
-    {label:'Gross Margin %',val:m.gm,p1:p.gm,p2:p2.gm,fmt:(v)=>fmtPct(v),insight:'(Thực nhận - CP QC - Thuế) / DT',cls:'kpi-card-2'},
-    {label:'Đơn Hàng',val:m.orders,p1:p.orders,p2:p2.orders,fmt:(v)=>fmt(Math.round(v)),insight:'Tổng số đơn hàng',cls:'kpi-card-3'},
-    {label:'Doanh Thu / Đơn',val:m.rpo,p1:p.rpo,p2:p2.rpo,fmt:(v)=>fmtVND(v),insight:'DT trung bình mỗi đơn',cls:'kpi-card-4'},
-    {label:'Net Revenue Rate',val:m.nr,p1:p.nr,p2:p2.nr,fmt:(v)=>fmtPct(v),insight:'Thực nhận / Doanh thu',cls:'kpi-card-5'},
+    {label:'Doanh thu gộp',val:m.rev,p1:p.rev,p2:p2.rev,fmt:(v)=>fmtVND(v),insight:'Tổng doanh thu trong kỳ',higherIsBetter:true},
+    {label:'Thực nhận',val:m.tn,p1:p.tn,p2:p2.tn,fmt:(v)=>fmtVND(v),insight:'Sau chiết khấu & hoàn tiền',higherIsBetter:true},
+    {label:'Gross margin %',val:m.gm,p1:p.gm,p2:p2.gm,fmt:(v)=>fmtPct(v),insight:'(Thực nhận - CP QC - Thuế) / DT',higherIsBetter:true},
+    {label:'Đơn hàng',val:m.orders,p1:p.orders,p2:p2.orders,fmt:(v)=>fmt(Math.round(v)),insight:'Tổng số đơn hàng',higherIsBetter:true},
+    {label:'Doanh thu / đơn',val:m.rpo,p1:p.rpo,p2:p2.rpo,fmt:(v)=>fmtVND(v),insight:'DT trung bình mỗi đơn',higherIsBetter:true},
+    {label:'Net revenue rate',val:m.nr,p1:p.nr,p2:p2.nr,fmt:(v)=>fmtPct(v),insight:'Thực nhận / Doanh thu',higherIsBetter:true},
   ];
   function badge(val,ref){
     if(!ref||ref===0)return '';
@@ -749,24 +752,35 @@ function updateKpiCards(){
     const arrow=Math.abs(delta)<0.05?'—':delta>=0?'▲':'▼';
     return `<span class="delta-badge ${cls}">${arrow} ${Math.abs(delta).toFixed(1)}%</span>`;
   }
+  function borderCls(val,ref,higherIsBetter){
+    if(!ref||ref===0)return 'kpi-card-flat';
+    const delta=(val-ref)/Math.abs(ref)*100;
+    if(Math.abs(delta)<0.05)return 'kpi-card-flat';
+    const better=higherIsBetter?delta>0:delta<0;
+    return better?'kpi-card-up':'kpi-card-down';
+  }
   const container=document.getElementById('kpi-cards');
-  container.innerHTML=metrics.map(mt=>`<div class="kpi-card ${mt.cls}">
+  container.innerHTML=metrics.map(mt=>{
+    const bc=borderCls(mt.val,mt.p1,mt.higherIsBetter);
+    const isDanger=mt.val<0||(mt.higherIsBetter&&mt.p1>0&&(mt.val-mt.p1)/Math.abs(mt.p1)*100<-10);
+    return `<div class="kpi-card ${bc}${isDanger?' kpi-card-danger':''}">
     <div class="kpi-card-label">${mt.label}</div>
     <div class="kpi-card-value">${mt.fmt(mt.val)}</div>
-    <div class="kpi-card-sub" style="display:flex;flex-direction:column;gap:3px;margin-top:6px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--text2);font-size:0.7rem">Cùng kỳ ${y1label}:</span>
-        <span style="font-size:0.75rem">${mt.fmt(mt.p1)} ${badge(mt.val,mt.p1)}</span>
+    <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+        <span style="color:var(--text2);font-size:0.68rem">${y1label}:</span>
+        <span style="font-size:0.72rem">${mt.fmt(mt.p1)}</span>${badge(mt.val,mt.p1)}
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--text2);font-size:0.7rem">Cùng kỳ ${y2label}:</span>
-        <span style="font-size:0.75rem">${mt.fmt(mt.p2)} ${badge(mt.val,mt.p2)}</span>
+      <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+        <span style="color:var(--text2);font-size:0.68rem">${y2label}:</span>
+        <span style="font-size:0.72rem">${mt.fmt(mt.p2)}</span>${badge(mt.val,mt.p2)}
       </div>
     </div>
     <div class="kpi-card-bottom" style="margin-top:8px">
       <span class="kpi-insight">${mt.insight}</span>
     </div>
-  </div>`).join('');
+  </div>`;
+  }).join('');
 }
 
 function updateKpiProgress(){}
@@ -977,7 +991,8 @@ function updateChannelCharts(){
   });
   const nrLabels=Object.keys(chNR).sort((a,b)=>chNR[b].tn/chNR[b].rev-chNR[a].tn/chNR[a].rev);
   const nrVals=nrLabels.map(k=>chNR[k].rev>0?chNR[k].tn/chNR[k].rev*100:0);
-  const nrColors=nrLabels.map(k=>CHANNEL_COLORS[k]||'#94a3b8');
+  // Highlight kênh có NR Rate cao nhất (xanh) và thấp nhất (đỏ), còn lại primary
+  const nrColors=nrVals.map((v,i)=>i===0?'var(--sem-good)':i===nrVals.length-1?'var(--sem-risk)':'rgba(79,142,247,0.65)');
 
   destroyChart('nr-rate');
   const ctxB=document.getElementById('chart-nr-rate').getContext('2d');
@@ -1005,7 +1020,7 @@ function updateChannelCharts(){
   const ctxC=document.getElementById('chart-gm-channel').getContext('2d');
   charts['gm-channel']=new Chart(ctxC,{
     type:'bar',
-    data:{labels:gmLabels,datasets:[{label:'GM%',data:gmVals,backgroundColor:gmLabels.map(k=>CHANNEL_COLORS[k]||'#94a3b8'),borderRadius:4}]},
+    data:{labels:gmLabels,datasets:[{label:'GM%',data:gmVals,backgroundColor:gmVals.map((v,i,a)=>v===Math.max(...a)?'var(--sem-good)':v===Math.min(...a)?'var(--sem-risk)':'rgba(79,142,247,0.6)'),borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtPct(ctx.raw)}}},
       scales:{y:{ticks:{callback:v=>v.toFixed(0)+'%',font:{size:9}}},x:{ticks:{font:{size:8}}}}}
@@ -1094,7 +1109,7 @@ function updateTrendChart(){
           borderColor:'#94a3b8',borderDash:[5,5],backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:1.5}]:[]),
         ...(forecastLabels.length>0?[{label:'Dự báo',
           data:new Array(sortedDates.length-1).fill(null).concat([vals[vals.length-1],...forecastVals]),
-          borderColor:'#f5a623',borderDash:[8,4],backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2}]:[])
+          borderColor:'rgba(245,166,35,0.4)',borderDash:[8,4],backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:1.5}]:[])
       ]
     },
     options:{responsive:true,maintainAspectRatio:false,
@@ -1283,7 +1298,7 @@ function updateDOWChart(){
   const dowAvg=dowRev.map((v,i)=>dowCount[i]>0?v/dowCount[i]:0);
   const maxDOW=Math.max(...dowAvg);
   const minDOW=Math.min(...dowAvg.filter(v=>v>0));
-  const bgColors=dowAvg.map(v=>v===maxDOW?'#e94560':v===minDOW?'#94a3b8':'#0f3460');
+  const bgColors=dowAvg.map(v=>v===maxDOW?'var(--accent)':v===minDOW?'rgba(239,68,68,0.55)':'rgba(79,142,247,0.55)');
 
   destroyChart('dow');
   const ctx=document.getElementById('chart-dow').getContext('2d');
@@ -1318,8 +1333,8 @@ function updateTopStoresChart(){
   const sorted=Object.entries(storeRev).sort((a,b)=>b[1]-a[1]).slice(0,15);
   const labels=sorted.map(([s])=>s.split(' - ')[0]+' - '+s.split(' - ').slice(1).join(' - '));
   const vals=sorted.map(([,v])=>v);
-  const top5Colors=['#e94560','#f5a623','#53c28b','#a855f7','#06b6d4'];
-  const bgColors=vals.map((_,i)=>i<5?top5Colors[i]:'#cbd5e0');
+  // 1 màu cơ bản, chỉ highlight top 1 bằng accent
+  const bgColors=vals.map((_,i)=>i===0?'var(--accent)':'rgba(79,142,247,0.55)');
   const priorVals=sorted.map(([s])=>priorRev[s]||0);
 
   destroyChart('topstores');
@@ -1351,8 +1366,9 @@ function updateTopStoresChart(){
     const delta=p>0?(v-p)/p*100:0;
     const dClass=delta>=0?'delta-up':'delta-down';
     const dArrow=delta>=0?'▲':'▼';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:#f8fafc;margin-bottom:6px">
-      <div style="width:10px;height:10px;border-radius:50%;background:${top5Colors[i]};flex-shrink:0"></div>
+    const dotColor=i===0?'#F5A623':'#4F8EF7';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:var(--card2);margin-bottom:6px">
+      <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
       <div style="flex:1">
         <div class="text-xs font-bold text-navy">${s}</div>
       </div>
