@@ -587,22 +587,21 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
     <div class="search-row">
       <input type="text" id="table-search" placeholder="🔍 Tìm kiếm cửa hàng, kênh..." oninput="renderDataTable()">
       <span class="text-sm text-muted" id="table-count"></span>
+      <button class="btn btn-reset" id="btn-toggle-cols" onclick="toggleExtraCols()" title="Hiện/ẩn cột Chi Phí QC &amp; Thuế" style="white-space:nowrap;font-size:0.72rem">+ Hiện QC / Thuế</button>
     </div>
-    <div class="table-wrap">
-      <table id="data-table">
+    <div class="table-wrap" style="overflow-x:auto">
+      <table id="data-table" style="min-width:700px">
         <thead><tr>
-          <th onclick="sortTable('ngay')">Ngày ↕</th>
-          <th onclick="sortTable('thang')">Tháng ↕</th>
-          <th onclick="sortTable('tuan')">Tuần ↕</th>
-          <th onclick="sortTable('cua_hang')">Cửa hàng ↕</th>
+          <th onclick="sortTable('ngay')" style="position:sticky;left:0;z-index:2;background:var(--card2)">Ngày ↕</th>
+          <th onclick="sortTable('cua_hang')" style="position:sticky;left:80px;z-index:2;background:var(--card2)">Cửa hàng ↕</th>
           <th onclick="sortTable('kenh')">Kênh ↕</th>
           <th onclick="sortTable('so_don')" class="td-num">Đơn ↕</th>
           <th onclick="sortTable('doanh_thu')" class="td-num">Doanh thu ↕</th>
           <th onclick="sortTable('thuc_nhan')" class="td-num">Thực nhận ↕</th>
           <th onclick="sortTable('chiet_khau')" class="td-num">Chiết khấu ↕</th>
           <th onclick="sortTable('tb_don_hang')" class="td-num">TB/Đơn ↕</th>
-          <th onclick="sortTable('chi_phi_qc')" class="td-num">Chi phí QC ↕</th>
-          <th onclick="sortTable('thue')" class="td-num">Thuế ↕</th>
+          <th onclick="sortTable('chi_phi_qc')" class="td-num col-extra" style="display:none">Chi phí QC ↕</th>
+          <th onclick="sortTable('thue')" class="td-num col-extra" style="display:none">Thuế ↕</th>
         </tr></thead>
         <tbody id="table-body"></tbody>
       </table>
@@ -1534,9 +1533,9 @@ function renderHealthCard([store,info]){
       <div class="health-stat"><div class="health-stat-val">${(info.rpo/1000).toFixed(0)}K</div><div class="health-stat-label">DT/Đơn</div></div>
     </div>
     <div style="margin-top:8px;display:flex;flex-direction:column;gap:3px;font-size:10px;color:#666">
-      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:#0f3460;font-weight:600">NR Rate</span><div style="flex:1;height:5px;background:#eee;border-radius:3px"><div style="height:100%;width:${nrW}%;background:#0f3460;border-radius:3px"></div></div><span style="width:28px;text-align:right">${info.nr}%</span></div>
-      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:#e94560;font-weight:600">GM%</span><div style="flex:1;height:5px;background:#eee;border-radius:3px"><div style="height:100%;width:${gmW}%;background:#e94560;border-radius:3px"></div></div><span style="width:28px;text-align:right">${info.gm}%</span></div>
-      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:#888">Kênh</span><div style="flex:1;height:5px;background:#eee;border-radius:3px"><div style="height:100%;width:${Math.round(info.channels/8*100)}%;background:#a855f7;border-radius:3px"></div></div><span style="width:28px;text-align:right">${info.channels}</span></div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">NR Rate</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${nrW}%;background:var(--primary);border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.nr}%</span></div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">GM%</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${gmW}%;background:var(--primary);border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.gm}%</span></div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">Kênh</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${Math.round(info.channels/8*100)}%;background:var(--primary);border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.channels}</span></div>
     </div>
   </div>`;
 }
@@ -1641,7 +1640,7 @@ function renderSummaryTable(){
       <td class="td-num">${r.gm}%</td>
       <td class="td-num">${fmtVND(r.rpo)}</td>
       <td class="td-num">${fmt(Math.round(r.orders))}</td>
-      <td class="td-num"><span class="health-status ${hCls}">${r.health}</span></td>
+      <td class="td-num"><span class="health-status ${hCls}" style="font-size:0.75rem;padding:3px 10px">${r.health}</span></td>
     </tr>`;
   }).join('');
 }
@@ -1675,21 +1674,20 @@ function renderDataTable(){
   const pageData=filtered.slice(start,start+PAGE_SIZE);
   document.getElementById('table-count').textContent=`${total} bản ghi`;
   const body=document.getElementById('table-body');
+  const extraVisible=document.getElementById('btn-toggle-cols')&&document.getElementById('btn-toggle-cols').dataset.open==='1';
   body.innerHTML=pageData.map(r=>{
     const chColor=CHANNEL_COLORS[r.kenh]||'#94a3b8';
     return `<tr>
-      <td>${r.ngay}</td>
-      <td class="td-num">${r.thang}</td>
-      <td class="td-num">${r.tuan}</td>
-      <td>${r.cua_hang}</td>
+      <td style="position:sticky;left:0;background:var(--card);z-index:1">${r.ngay}</td>
+      <td style="position:sticky;left:80px;background:var(--card);z-index:1;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cua_hang}</td>
       <td><span class="channel-badge" style="background:${chColor}22;color:${chColor}">${r.kenh}</span></td>
       <td class="td-num">${fmt(r.so_don)}</td>
       <td class="td-num">${fmtVND(r.doanh_thu)}</td>
       <td class="td-num">${fmtVND(r.thuc_nhan)}</td>
       <td class="td-num">${fmtVND(r.chiet_khau)}</td>
       <td class="td-num">${fmtVND(r.tb_don_hang)}</td>
-      <td class="td-num">${fmtVND(r.chi_phi_qc)}</td>
-      <td class="td-num">${fmtVND(r.thue)}</td>
+      <td class="td-num col-extra" style="display:${extraVisible?'table-cell':'none'}">${fmtVND(r.chi_phi_qc)}</td>
+      <td class="td-num col-extra" style="display:${extraVisible?'table-cell':'none'}">${fmtVND(r.thue)}</td>
     </tr>`;
   }).join('');
   // Pagination
@@ -1703,6 +1701,14 @@ function renderDataTable(){
   btns+=`<button class="page-btn" onclick="changePage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
   btns+=`<span class="page-info">${start+1}–${Math.min(start+PAGE_SIZE,total)} / ${total}</span>`;
   pg.innerHTML=btns;
+}
+function toggleExtraCols(){
+  const btn=document.getElementById('btn-toggle-cols');
+  const open=btn.dataset.open==='1';
+  btn.dataset.open=open?'0':'1';
+  btn.textContent=open?'+ Hiện QC / Thuế':'− Ẩn QC / Thuế';
+  const disp=open?'none':'table-cell';
+  document.querySelectorAll('.col-extra').forEach(el=>el.style.display=disp);
 }
 function changePage(p){
   const q=(document.getElementById('table-search').value||'').toLowerCase();
