@@ -321,6 +321,7 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
   <div class="nav-section">
     <div class="nav-section-title">Xu hướng</div>
     <a class="nav-link" onclick="scrollTo_('sec-trend')" title="Trend Charts"><span class="nav-icon">📈</span><span class="nav-link-text">Trend Charts</span></a>
+    <a class="nav-link" onclick="scrollTo_('sec-daily-rev')" title="Doanh Thu Theo Ngày"><span class="nav-icon">📊</span><span class="nav-link-text">Doanh Thu Theo Ngày</span></a>
     <a class="nav-link" onclick="scrollTo_('sec-dow')" title="Ngày cao điểm"><span class="nav-icon">📅</span><span class="nav-link-text">Ngày cao điểm</span></a>
     <a class="nav-link" onclick="scrollTo_('sec-topstores')" title="Top Stores"><span class="nav-icon">🏆</span><span class="nav-link-text">Top Stores</span></a>
   </div>
@@ -448,6 +449,14 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
       <div class="panel-title">Phân tích</div>
       <div id="trend-analysis"></div>
     </div>
+  </div>
+</div>
+
+<div id="sec-daily-rev">
+  <div class="section-title">📊 Doanh Thu Theo Ngày</div>
+  <div class="card" style="padding:20px">
+    <div class="panel-title" id="daily-rev-title">Doanh thu từng ngày trong kỳ</div>
+    <div class="chart-wrap" style="min-height:260px"><canvas id="chart-daily-rev"></canvas></div>
   </div>
 </div>
 
@@ -1107,6 +1116,80 @@ function updateTrendChart(){
 }
 
 // ============================================================
+// DAILY REVENUE BAR CHART
+// ============================================================
+function updateDailyRevChart(){
+  const data=getFilteredData();
+  const prior=getPriorData();
+  const from=document.getElementById('f-from').value;
+  const to=document.getElementById('f-to').value;
+
+  // Nhóm doanh thu theo ngày (ISO)
+  const byDate={};
+  data.forEach(r=>{
+    const iso=toISO(r.ngay); if(!iso)return;
+    byDate[iso]=(byDate[iso]||0)+r.doanh_thu;
+  });
+  const dates=Object.keys(byDate).sort();
+
+  // Cùng kỳ năm ngoái — ánh xạ ngày sang năm hiện tại để overlay
+  const priorByDate={};
+  prior.forEach(r=>{
+    const iso=toISO(r.ngay); if(!iso)return;
+    const shifted=shiftYear(iso,1); // đưa về cùng năm hiện tại
+    priorByDate[shifted]=(priorByDate[shifted]||0)+r.doanh_thu;
+  });
+
+  const labels=dates.map(d=>{const[y,m,day]=d.split('-');return `${day}/${m}`;});
+  const vals=dates.map(d=>byDate[d]);
+  const priorVals=dates.map(d=>priorByDate[d]||null);
+
+  const y1=from?shiftYear(from,-1).substring(0,4):'N-1';
+  const titleEl=document.getElementById('daily-rev-title');
+  if(titleEl&&from&&to) titleEl.textContent=`Doanh thu từng ngày: ${fromISO(from)} – ${fromISO(to)}`;
+
+  destroyChart('daily-rev');
+  const ctx=document.getElementById('chart-daily-rev').getContext('2d');
+  charts['daily-rev']=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Kỳ hiện tại',
+          data:vals,
+          backgroundColor:'rgba(99,102,241,0.75)',
+          borderRadius:3,
+          order:2
+        },
+        {
+          label:`Cùng kỳ ${y1}`,
+          data:priorVals,
+          type:'line',
+          borderColor:'#f59e0b',
+          backgroundColor:'transparent',
+          borderWidth:1.5,
+          pointRadius:0,
+          tension:0.3,
+          order:1
+        }
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{font:{size:10},boxWidth:12}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtVND(ctx.raw||0)}`}}
+      },
+      scales:{
+        x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true,maxTicksLimit:31}},
+        y:{ticks:{callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v,font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}}
+      }
+    }
+  });
+}
+
+// ============================================================
 // DAY OF WEEK CHART
 // ============================================================
 function updateDOWChart(){
@@ -1496,6 +1579,7 @@ function updateAll(){
   generateRisks();
   updateChannelCharts();
   updateTrendChart();
+  updateDailyRevChart();
   updateDOWChart();
   updateTopStoresChart();
   updateHealthGrid();
