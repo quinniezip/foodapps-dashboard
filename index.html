@@ -1403,8 +1403,8 @@ function updateTopStoresChart(){
   const sorted=Object.entries(storeRev).sort((a,b)=>b[1]-a[1]).slice(0,15);
   const labels=sorted.map(([s])=>s.split(' - ')[0]+' - '+s.split(' - ').slice(1).join(' - '));
   const vals=sorted.map(([,v])=>v);
-  // 1 màu cơ bản, chỉ highlight top 1 bằng accent
-  const bgColors=vals.map((_,i)=>i===0?'#F5A623':'rgba(79,142,247,0.65)');
+  // Top 1 = vàng accent, còn lại = xanh primary đặc
+  const bgColors=vals.map((_,i)=>i===0?'#F5A623':'#4F8EF7');
   const priorVals=sorted.map(([s])=>priorRev[s]||0);
 
   destroyChart('topstores');
