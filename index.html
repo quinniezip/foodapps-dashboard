@@ -465,11 +465,16 @@ table tr:hover td{background:rgba(99,102,241,0.05)}
 </div>
 
 <div id="sec-daily-rev">
-  <div class="section-title">📊 Doanh Thu Theo Ngày</div>
-  <div class="card" style="padding:20px">
-    <div class="panel-title" id="daily-rev-title">Doanh thu từng ngày trong kỳ</div>
-    <div class="chart-wrap" style="min-height:260px"><canvas id="chart-daily-rev"></canvas></div>
-    <div id="daily-rev-insight" style="margin-top:16px;padding:16px 20px;background:var(--card2);border-radius:10px;border-left:3px solid var(--accent);line-height:1.6;color:var(--text2)"></div>
+  <div class="section-title" onclick="toggleDailyRev()" style="cursor:pointer;user-select:none">
+    📊 Doanh Thu Theo Ngày
+    <span id="daily-rev-toggle" style="font-size:0.75rem;font-weight:400;color:var(--text2);letter-spacing:0;text-transform:none;margin-left:8px">▶ Mở rộng</span>
+  </div>
+  <div id="daily-rev-body" style="display:none">
+    <div class="card" style="padding:20px">
+      <div class="panel-title" id="daily-rev-title">Doanh thu từng ngày trong kỳ</div>
+      <div class="chart-wrap" style="min-height:260px"><canvas id="chart-daily-rev"></canvas></div>
+      <div id="daily-rev-insight" style="margin-top:16px;padding:16px 20px;background:var(--card2);border-radius:10px;border-left:3px solid var(--accent);line-height:1.6;color:var(--text2)"></div>
+    </div>
   </div>
 </div>
 
@@ -1727,6 +1732,15 @@ function renderDataTable(){
   btns+=`<span class="page-info">${start+1}–${Math.min(start+PAGE_SIZE,total)} / ${total}</span>`;
   pg.innerHTML=btns;
 }
+let _dailyRevRendered=false;
+function toggleDailyRev(){
+  const body=document.getElementById('daily-rev-body');
+  const lbl=document.getElementById('daily-rev-toggle');
+  const open=body.style.display==='none';
+  body.style.display=open?'':'none';
+  lbl.textContent=open?'▼ Thu gọn':'▶ Mở rộng';
+  if(open&&!_dailyRevRendered){_dailyRevRendered=true;updateDailyRevChart();}
+}
 function toggleExtraCols(){
   const btn=document.getElementById('btn-toggle-cols');
   const open=btn.dataset.open==='1';
@@ -1774,7 +1788,11 @@ function updateAll(){
   generateRisks();
   updateChannelCharts();
   updateTrendChart();
-  updateDailyRevChart();
+  // Daily rev chỉ render khi section đang mở; reset flag để re-render khi filter thay đổi
+  _dailyRevRendered=false;
+  if(document.getElementById('daily-rev-body').style.display!=='none'){
+    _dailyRevRendered=true;updateDailyRevChart();
+  }
   updateDOWChart();
   updateTopStoresChart();
   updateHealthGrid();
