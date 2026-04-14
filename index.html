@@ -692,6 +692,20 @@ function shiftYear(isoDate, years){
   // Dịch chuyển năm trong ISO date string (YYYY-MM-DD)
   return isoDate.replace(/^(\d{4})/, y => String(+y + years));
 }
+function shiftMonth(isoDate, months){
+  // Dịch chuyển tháng trong ISO date, xử lý đúng cuối tháng
+  const d=new Date(isoDate+'T00:00:00');
+  d.setMonth(d.getMonth()+months);
+  return d.toISOString().substring(0,10);
+}
+function getPriorMonthData(){
+  // Cùng kỳ tháng trước (dịch -1 tháng)
+  const from=document.getElementById('f-from').value;
+  const to=document.getElementById('f-to').value;
+  if(!from||!to)return [];
+  const pFrom=shiftMonth(from,-1), pTo=shiftMonth(to,-1);
+  return RAW_DATA.filter(r=>{const iso=toISO(r.ngay);return iso>=pFrom&&iso<=pTo;});
+}
 function getPriorData(){
   // Cùng kỳ năm ngoái
   const from=document.getElementById('f-from').value;
@@ -1395,17 +1409,24 @@ function updateDOWChart(){
 function updateTopStoresChart(){
   const data=getFilteredData();
   const prior=getPriorData();
+  const priorMonth=getPriorMonthData();
+  const from=document.getElementById('f-from').value;
+
   const storeRev={};
   data.forEach(r=>{storeRev[r.cua_hang]=(storeRev[r.cua_hang]||0)+r.doanh_thu;});
   const priorRev={};
   prior.forEach(r=>{priorRev[r.cua_hang]=(priorRev[r.cua_hang]||0)+r.doanh_thu;});
+  const priorMonthRev={};
+  priorMonth.forEach(r=>{priorMonthRev[r.cua_hang]=(priorMonthRev[r.cua_hang]||0)+r.doanh_thu;});
 
   const sorted=Object.entries(storeRev).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  const labels=sorted.map(([s])=>s.split(' - ')[0]+' - '+s.split(' - ').slice(1).join(' - '));
   const vals=sorted.map(([,v])=>v);
-  // Top 1 = vàng accent, còn lại = xanh primary đặc
-  const bgColors=vals.map((_,i)=>i===0?'#F5A623':'#4F8EF7');
+  // Tất cả bars "kỳ này" màu vàng
+  const bgColors=vals.map(()=>'#F5A623');
   const priorVals=sorted.map(([s])=>priorRev[s]||0);
+  const priorMonthVals=sorted.map(([s])=>priorMonthRev[s]||0);
+  const y1=from?shiftYear(from,-1).substring(0,4):'N-1';
+  const prevMonthLabel=from?(()=>{const d=new Date(from+'T00:00:00');d.setMonth(d.getMonth()-1);return `T${d.getMonth()+1}/${d.getFullYear()}`})():'T.trước';
 
   destroyChart('topstores');
   const ctx=document.getElementById('chart-topstores').getContext('2d');
@@ -1414,8 +1435,9 @@ function updateTopStoresChart(){
     data:{
       labels:sorted.map(([s])=>s),
       datasets:[
-        {label:'Kỳ này',data:vals,backgroundColor:bgColors,borderRadius:4},
-        {label:'Cùng kỳ năm trước',data:priorVals,backgroundColor:'rgba(20,184,166,0.35)',borderRadius:4}
+        {label:'Kỳ này',data:vals,backgroundColor:'#F5A623',borderRadius:4},
+        {label:`Cùng kỳ ${prevMonthLabel}`,data:priorMonthVals,backgroundColor:'rgba(79,142,247,0.6)',borderRadius:4},
+        {label:`Cùng kỳ ${y1}`,data:priorVals,backgroundColor:'rgba(20,184,166,0.5)',borderRadius:4}
       ]
     },
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
@@ -1425,26 +1447,26 @@ function updateTopStoresChart(){
           title:items=>sorted[items[0].dataIndex][0],
           label:ctx=>ctx.dataset.label+': '+fmtVND(ctx.raw)
         }}},
-      scales:{x:{ticks:{callback:v=>(v/1000000).toFixed(0)+'M',font:{size:9}},grid:{color:'rgba(0,0,0,0.05)'}},
+      scales:{x:{ticks:{callback:v=>(v/1000000).toFixed(0)+'M',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}},
               y:{ticks:{font:{size:10},autoSkip:false}}}}
   });
 
-  // Top 5 detail
+  // Top 5 detail — so sánh với tháng trước
   const top5=sorted.slice(0,5);
   const top5HTML=top5.map(([s,v],i)=>{
-    const p=priorRev[s]||0;
-    const delta=p>0?(v-p)/p*100:0;
+    const pm=priorMonthRev[s]||0;
+    const delta=pm>0?(v-pm)/pm*100:0;
     const dClass=delta>=0?'delta-up':'delta-down';
     const dArrow=delta>=0?'▲':'▼';
-    const dotColor=i===0?'#F5A623':'#4F8EF7';
+    const dotColor='#F5A623';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:var(--card2);margin-bottom:6px">
       <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
       <div style="flex:1">
-        <div class="text-xs font-bold text-navy">${s}</div>
+        <div class="text-xs font-bold" style="color:#f1f5f9">${s}</div>
       </div>
       <div style="text-align:right">
-        <div class="text-xs font-bold">${(v/1000000).toFixed(1)}M</div>
-        <span class="delta-badge ${dClass}" style="font-size:0.62rem">${dArrow} ${Math.abs(delta).toFixed(1)}%</span>
+        <div class="text-xs font-bold" style="color:#f1f5f9">${(v/1000000).toFixed(1)}M</div>
+        <span class="delta-badge ${dClass}" style="font-size:0.62rem">${dArrow} ${Math.abs(delta).toFixed(1)}% vs ${prevMonthLabel}</span>
       </div>
     </div>`;
   }).join('');
