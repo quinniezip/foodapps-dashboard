@@ -641,6 +641,9 @@ const MONTHS = [1,2,3];
 
 // Chart instances
 const charts = {};
+// Global Chart.js defaults — dark mode: tất cả text trắng, grid mờ
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
 
 // Table state
 let tableSort = {col:'ngay',asc:true};
@@ -1019,7 +1022,7 @@ function updateChannelCharts(){
   const nrLabels=Object.keys(chNR).sort((a,b)=>chNR[b].tn/chNR[b].rev-chNR[a].tn/chNR[a].rev);
   const nrVals=nrLabels.map(k=>chNR[k].rev>0?chNR[k].tn/chNR[k].rev*100:0);
   // Highlight kênh có NR Rate cao nhất (xanh) và thấp nhất (đỏ), còn lại primary
-  const nrColors=nrVals.map((v,i)=>i===0?'var(--sem-good)':i===nrVals.length-1?'var(--sem-risk)':'rgba(79,142,247,0.65)');
+  const nrColors=nrVals.map((v,i)=>i===0?'#22c55e':i===nrVals.length-1?'#ef4444':'rgba(79,142,247,0.7)');
 
   destroyChart('nr-rate');
   const ctxB=document.getElementById('chart-nr-rate').getContext('2d');
@@ -1047,7 +1050,7 @@ function updateChannelCharts(){
   const ctxC=document.getElementById('chart-gm-channel').getContext('2d');
   charts['gm-channel']=new Chart(ctxC,{
     type:'bar',
-    data:{labels:gmLabels,datasets:[{label:'GM%',data:gmVals,backgroundColor:gmVals.map((v,i,a)=>v===Math.max(...a)?'var(--sem-good)':v===Math.min(...a)?'var(--sem-risk)':'rgba(79,142,247,0.6)'),borderRadius:4}]},
+    data:{labels:gmLabels,datasets:[{label:'GM%',data:gmVals,backgroundColor:gmLabels.map(k=>CHANNEL_COLORS[k]||'#94a3b8'),borderRadius:4}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtPct(ctx.raw)}}},
       scales:{x:{ticks:{callback:v=>v.toFixed(0)+'%',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{font:{size:9}}}}}
@@ -1145,7 +1148,7 @@ function updateTrendChart(){
       labels:allLabels,
       datasets:[
         {label:'Doanh thu',data:[...vals,...forecastVals.map((_,i)=>i===0?vals[vals.length-1]:null)].concat(forecastVals.length>0?forecastVals.slice(1):new Array(forecastLabels.length).fill(null)),
-          borderColor:'#0f3460',backgroundColor:'rgba(15,52,96,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2},
+          borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2},
         ...(priorDates.length>0?[{label:'Kỳ trước',data:priorDates.map(d=>priorByDate[d]),
           borderColor:'#94a3b8',borderDash:[5,5],backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:1.5}]:[]),
         ...(forecastLabels.length>0?[{label:'Dự báo',
@@ -1235,7 +1238,7 @@ function updateDailyRevChart(){
             anchor:'end',
             align:'end',
             formatter:v=>fmtVND(v),
-            color:ctx=>top3.has(dates[ctx.dataIndex])?'#f59e0b':'#94a3b8',
+            color:ctx=>top3.has(dates[ctx.dataIndex])?'#f59e0b':'#e2e8f0',
             font:{size:9,weight:'600'},
             padding:{left:6}
           }
@@ -1243,8 +1246,8 @@ function updateDailyRevChart(){
         {
           label:`Cùng kỳ ${y1}`,
           data:priorVals,
-          backgroundColor:'rgba(100,116,139,0.3)',
-          borderColor:'rgba(100,116,139,0.5)',
+          backgroundColor:'rgba(20,184,166,0.35)',
+          borderColor:'rgba(20,184,166,0.6)',
           borderWidth:1,
           borderRadius:3,
           order:2,
@@ -1401,7 +1404,7 @@ function updateTopStoresChart(){
   const labels=sorted.map(([s])=>s.split(' - ')[0]+' - '+s.split(' - ').slice(1).join(' - '));
   const vals=sorted.map(([,v])=>v);
   // 1 màu cơ bản, chỉ highlight top 1 bằng accent
-  const bgColors=vals.map((_,i)=>i===0?'var(--accent)':'rgba(79,142,247,0.55)');
+  const bgColors=vals.map((_,i)=>i===0?'#F5A623':'rgba(79,142,247,0.65)');
   const priorVals=sorted.map(([s])=>priorRev[s]||0);
 
   destroyChart('topstores');
@@ -1412,7 +1415,7 @@ function updateTopStoresChart(){
       labels:sorted.map(([s])=>s),
       datasets:[
         {label:'Kỳ này',data:vals,backgroundColor:bgColors,borderRadius:4},
-        {label:'Kỳ trước',data:priorVals,backgroundColor:'rgba(148,163,184,0.4)',borderRadius:4}
+        {label:'Cùng kỳ năm trước',data:priorVals,backgroundColor:'rgba(20,184,166,0.35)',borderRadius:4}
       ]
     },
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
