@@ -625,16 +625,16 @@ let RAW_DATA = [];
 // ============================================================
 const CHANNELS = ['ShopeeFood','GrabFood','BeFood','Goka','Iloka','Hoả Tốc 247','VILL','Xanh Ngon'];
 const CHANNEL_COLORS = {
-  GrabFood:'#00b14f',    // Grab xanh lá
-  ShopeeFood:'#ee4d2d',  // Shopee cam đỏ
-  BeFood:'#f5c518',      // Be vàng
-  Gojek:'#00aaa0',       // Gojek xanh teal
-  Godi:'#ff6b35',        // Godi cam
-  Goka:'#06b6d4',        // Goka cyan
-  Iloka:'#a855f7',       // Iloka tím
-  'Hoả Tốc 247':'#f97316', // Hoả Tốc cam đậm
-  VILL:'#3b82f6',        // VILL xanh dương
-  'Xanh Ngon':'#10b981'  // Xanh Ngon xanh lá nhạt
+  GrabFood:'#00b14f',      // xanh lá (Grab brand)
+  Iloka:'#22c55e',         // xanh lá sáng
+  ShopeeFood:'#ef4444',    // đỏ (Shopee brand)
+  'Hoả Tốc 247':'#b91c1c', // đỏ đậm
+  BeFood:'#f5c518',        // vàng (Be brand)
+  Goka:'#f97316',          // cam
+  VILL:'#fb923c',          // cam nhạt
+  'Xanh Ngon':'#14b8a6',   // xanh ngọc teal
+  Gojek:'#00aaa0',         // teal (Gojek brand)
+  Godi:'#e879f9',          // hồng tím
 };
 const DOW_LABELS = ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','CN'];
 const MONTHS = [1,2,3];
@@ -1536,9 +1536,9 @@ function renderHealthCard([store,info]){
       <div class="health-stat"><div class="health-stat-val">${(info.rpo/1000).toFixed(0)}K</div><div class="health-stat-label">DT/Đơn</div></div>
     </div>
     <div style="margin-top:8px;display:flex;flex-direction:column;gap:3px;font-size:10px;color:#666">
-      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">NR Rate</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${nrW}%;background:var(--primary);border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.nr}%</span></div>
-      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">GM%</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${gmW}%;background:var(--primary);border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.gm}%</span></div>
-      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">Kênh</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${Math.round(info.channels/8*100)}%;background:var(--primary);border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.channels}</span></div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">NR Rate</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${nrW}%;background:#a855f7;border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.nr}%</span></div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">GM%</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${gmW}%;background:#ef4444;border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.gm}%</span></div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:50px;color:var(--text2);font-size:0.68rem">Kênh</span><div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:${Math.round(info.channels/8*100)}%;background:#f59e0b;border-radius:3px"></div></div><span style="width:28px;text-align:right;font-size:0.68rem;color:#f1f5f9">${info.channels}</span></div>
     </div>
   </div>`;
 }
