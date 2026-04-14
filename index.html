@@ -1036,7 +1036,7 @@ function updateChannelCharts(){
   const nrLabels=Object.keys(chNR).sort((a,b)=>chNR[b].tn/chNR[b].rev-chNR[a].tn/chNR[a].rev);
   const nrVals=nrLabels.map(k=>chNR[k].rev>0?chNR[k].tn/chNR[k].rev*100:0);
   // Highlight kênh có NR Rate cao nhất (xanh) và thấp nhất (đỏ), còn lại primary
-  const nrColors=nrVals.map((v,i)=>i===0?'#22c55e':i===nrVals.length-1?'#ef4444':'rgba(79,142,247,0.7)');
+  const nrColors=nrLabels.map(k=>CHANNEL_COLORS[k]||'#94a3b8');
 
   destroyChart('nr-rate');
   const ctxB=document.getElementById('chart-nr-rate').getContext('2d');
